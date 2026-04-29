@@ -5,8 +5,8 @@
 A Django custom Manager class responsible for handling "table-level" operations. It separates the logic used to *find* or *create* cycles from the business logic of the cycle itself.
 
 **Methods:**
-* **`getActiveCycle(user: User)`**: Queries the database to retrieve the currently active `BudgetCycle` for the specified user. 
-* **`createCycle(user, allowance, start, end)`**: Handles the initialization of a new budget cycle, setting up default values and ensuring the cycle is bound to the user.
+* **`get_active_cycle(user: User)`**: Queries the database to retrieve the currently active `BudgetCycle` for the specified user.
+* **`create_cycle(user, allowance, start, end)`**: Handles the initialization of a new budget cycle, setting up default values and ensuring the cycle is bound to the user.
 
 ---
 
@@ -16,24 +16,24 @@ The core data model representing an active allowance period. It acts as the "Sou
 
 **Attributes (Stored Fields):**
 * **`user`**: `ForeignKey(User)` - Links the budget cycle to a specific user account.
-* **`totalAllowance`**: `Decimal` - The initial budget amount set by the user for the cycle.
-* **`remainingCycleBalance`**: `Decimal` - A stored field tracking the overall remaining money. Storing this prevents expensive database summations every time the app loads.
-* **`spentToday`**: `Decimal` - Tracks money spent exactly on the current day. Used to power the live "Today Tracker" UI.
-* **`lastUpdateDate`**: `Date` - Tracks the last time an expense was logged. Used to solve the "Midnight Problem" by indicating when `spentToday` needs to automatically reset to 0.
-* **`startDate`**: `Date` - The beginning date of the cycle.
-* **`endDate`**: `Date` - The final date of the cycle.
-* **`isActive`**: `Boolean` - A flag indicating whether this is the user's currently active cycle.
+* **`total_allowance`**: `Decimal` - The initial budget amount set by the user for the cycle.
+* **`remaining_cycle_balance`**: `Decimal` - A stored field tracking the overall remaining money. Storing this prevents expensive database summations every time the app loads.
+* **`spent_today`**: `Decimal` - Tracks money spent exactly on the current day. Used to power the live "Today Tracker" UI.
+* **`last_update_date`**: `Date` - Tracks the last time an expense was logged. Used to solve the "Midnight Problem" by indicating when `spent_today` needs to automatically reset to 0.
+* **`start_date`**: `Date` - The beginning date of the cycle.
+* **`end_date`**: `Date` - The final date of the cycle.
+* **`is_active`**: `Boolean` - A flag indicating whether this is the user's currently active cycle.
 
 **Methods (Business Logic):**
-* **`getTotalSpent()`**: Returns the total spent by calculating `totalAllowance - remainingCycleBalance`.
-* **`getRemainingBalance()`**: A getter method that simply returns the `remainingCycleBalance`.
-* **`calculateDailyLimit()`**: Calculates the dynamic safe daily limit (`remainingCycleBalance / getRemainingDays()`). Automatically handles positive/negative rollover.
-* **`getRemainingDays()`**: Calculates the days left between today and the `endDate` (returns a minimum of 1 to avoid division by zero).
-* **`getThresholdStatus()`**: Evaluates the percentage of the allowance spent and returns the corresponding `AllowanceStatus`.
-* **`isFinalDay()`**: Returns `True` if today's date matches the `endDate`, used to trigger the "final day" UI banner.
-* **`getRemainingToday()`**: Powers the daily tracker. Calculates `calculateDailyLimit() - spentToday`. It internally checks `lastUpdateDate` to treat `spentToday` as 0 if a new day has started.
-* **`updateBalance(amount)`**: Triggered when a new transaction is logged. Deducts the amount from `remainingCycleBalance`, adds it to `spentToday`, and updates the `lastUpdateDate`.
-* **`clean()`**: An overridden Django method that acts as the model's internal validator. Enforces core SRS rules (e.g., `startDate` < `endDate`, and `totalAllowance` > 0).
+* **`get_total_spent()`**: Returns the total spent by calculating `total_allowance - remaining_cycle_balance`.
+* **`get_remaining_balance()`**: A getter method that simply returns the `remaining_cycle_balance`.
+* **`calculate_daily_limit()`**: Calculates the dynamic safe daily limit (`remaining_cycle_balance / get_remaining_days()`). Automatically handles positive/negative rollover.
+* **`get_remaining_days()`**: Calculates the days left between today and the `end_date` (returns a minimum of 1 to avoid division by zero).
+* **`get_threshold_status()`**: Evaluates the percentage of the allowance spent and returns the corresponding `AllowanceStatus`.
+* **`is_final_day()`**: Returns `True` if today's date matches the `end_date`, used to trigger the "final day" UI banner.
+* **`get_remaining_today()`**: Powers the daily tracker. Calculates `calculate_daily_limit() - spent_today`. It internally checks `last_update_date` to treat `spent_today` as 0 if a new day has started.
+* **`update_balance(amount)`**: Triggered when a new transaction is logged. Deducts the amount from `remaining_cycle_balance`, adds it to `spent_today`, and updates the `last_update_date`.
+* **`clean()`**: An overridden Django method that acts as the model's internal validator. Enforces core SRS rules (e.g., `start_date` < `end_date`, and `total_allowance` > 0).
 
 ---
 
@@ -43,18 +43,18 @@ An enumeration that defines the specific alert thresholds required by the SRS fo
 
 **Values:**
 * **`NORMAL`**: Usage is below 80%.
-* **`HIGHUSAGE`**: Usage has crossed the 80% mark (triggers warning alert).
-* **`LIMITREACHED`**: Usage has reached or exceeded 100% (triggers critical alert, suppressing the 80% alert if reached suddenly).
+* **`HIGH_USAGE`**: Usage has crossed the 80% mark (triggers warning alert).
+* **`LIMIT_REACHED`**: Usage has reached or exceeded 100% (triggers critical alert, suppressing the 80% alert if reached suddenly).
 
 # Transaction Module - Class Descriptions
 
 ## 1. TransactionManager
 **Description & Responsibility:**
-A custom Django Manager responsible for querying the database for transactions. It handles the SRS requirement for "Filtering logs based on Categories or Dates."
+A custom Django Manager responsible for querying the database for transactions. It handles the SRS requirement for "Filtering logs based on Categories or Dates".
 
 **Methods:**
-* **`getByCategory(cycle, category)`**: Returns a list of transactions belonging to a specific budget cycle filtered by the requested category.
-* **`getByDate(cycle, targetDate)`**: Returns a list of transactions for a specific day.
+* **`get_by_category(cycle, category)`**: Returns a list of transactions belonging to a specific budget cycle filtered by the requested category.
+* **`get_by_date(cycle, target_date)`**: Returns a list of transactions for a specific day.
 
 ---
 
@@ -65,23 +65,28 @@ The data model representing a single logged expense. It is responsible for valid
 **Attributes (Stored Fields):**
 * **`cycle`**: `ForeignKey(BudgetCycle)` - The budget cycle this expense belongs to. 
 * **`amount`**: `Decimal` - The numeric value of the expense. *SRS Rule:* Must be strictly numeric and limited to 10 digits (e.g., `max_digits=10`, `decimal_places=2` in Django).
-* **`category`**: `CategoryEnum` - The classification of the expense.
+* **`category`**: `Category` - The classification of the expense.
 * **`timestamp`**: `DateTime` - *SRS Rule:* Must record time. Handled automatically in Django via `auto_now_add=True`.
 * **`note`**: `String` - An optional text description of the expense.
 
 **Methods (Business Logic & Overrides):**
 * **`clean()`**: Validates that the `amount` is greater than 0 and strictly numeric before allowing the database to save it. 
 * **`save()`**: An overridden Django method. 
-  * *Logic:* When a transaction is saved, it automatically calls `self.cycle.updateBalance(amount)`. If the transaction is being *edited* (an existing record is changed), it calculates the difference between the old amount and the new amount and updates the cycle accordingly.
+  * *Logic:* When a transaction is saved, it automatically calls `self.cycle.update_balance(amount)`. If the transaction is being *edited* (an existing record is changed), it calculates the difference between the old amount and the new amount and updates the cycle accordingly.
 * **`delete()`**: An overridden Django method.
-  * *Logic:* When an expense is deleted, it calls `self.cycle.updateBalance(-amount)` (passing a negative number to "refund" the money back into the cycle's remaining balance).
+  * *Logic:* When an expense is deleted, it calls `self.cycle.update_balance(-amount)` (passing a negative number to "refund" the money back into the cycle's remaining balance).
 
 ---
 
 ## 3. Category
 **Description & Responsibility:**
 An enumeration of standard categories a user can choose from when logging an expense.
-
+**Values:**
+* **`FOOD`**
+* **`TRANSPORT`**
+* **`ENTERTRAINMENT`**
+* **`BILLS`**
+* **`OTHER`**
 # User & Security Module - Class Descriptions
 
 ## 1. User (Model)
@@ -91,15 +96,16 @@ A custom Django model inheriting from Django's built-in `AbstractUser` by direct
 **Inheritance:** Extends `django.contrib.auth.models.AbstractUser`.
 
 **Attributes (Stored Fields):**
-* **`hashedPin`**: `String` - Stores the cryptographically hashed version of the user's 4-digit PIN. The raw PIN is never stored in plaintext.
-* **`isPrivacyLockEnabled`**: `Boolean` - A user setting that toggles whether the application requires PIN entry upon launch.
-* **`failedAttempts`**: `Integer` - A counter that tracks consecutive incorrect PIN entries to prevent brute-force attacks.
+* **`hashed_pin`**: `String` - Stores the cryptographically hashed version of the user's 4-digit PIN. The raw PIN is never stored in plaintext.
+* **`is_privacy_lock_enabled`**: `Boolean` - A user setting that toggles whether the application requires PIN entry upon launch.
+* **`failed_attempts`**: `Integer` - A counter that tracks consecutive incorrect PIN entries to prevent brute-force attacks.
 
 **Methods (Security Logic):**
-* **`setPin(rawPin: String)`**: Hashes the provided 4-digit raw PIN and stores it in the `hashedPin` attribute. Used during initial setup and PIN resets.
-* **`verifyPin(rawPin: String)`**: Hashes the inputted PIN and compares it against the stored `hashedPin`. Returns `True` if they match, and `False` otherwise.
-* **`recordFailedAttempt()`**: Increments the `failedAttempts` counter by 1 when `verifyPin` returns `False`.
-* **`resetFailedAttempts()`**: Resets the `failedAttempts` counter to 0 upon a successful PIN verification.
+* **`set_pin(raw_pin: String)`**: Hashes the provided 4-digit raw PIN and stores it in the `hashed_pin` attribute. Used during initial setup and PIN resets.
+* **`verify_pin(raw_pin: String)`**: Hashes the inputted PIN and compares it against the stored `hashed_pin`. Returns `True` if they match, and `False` otherwise.
+* **`record_failed_attempt()`**: Increments the `failed_attempts` counter by 1 when `verify_pin` returns `False`.
+* **`reset_failed_attempts()`**: Resets the `failed_attempts` counter to 0 upon a successful PIN verification.
+
 # View Layer (Controllers) - Class Descriptions
 
 This section defines the Class-Based Views (CBVs) that drive the application's user interface. By inheriting from Django's built-in default views, these classes act as the controllers linking the UI templates to the underlying data models.
@@ -136,7 +142,7 @@ These are standard Django classes that provide built-in HTTP handling. Our custo
 **Methods:**
 * **`get_context_data()`**: Retrieves the active `BudgetCycle` and injects its calculated properties (like remaining daily balance and status alerts) into a `Dictionary` for the template to display.
 * **`post(request)`**: Overrides the default `TemplateView` behavior to accept incoming POST requests, specifically to handle "Quick Add" form submissions for logging an expense directly from the dashboard.
-* **`generateChartData(cycle)`**: A private helper method that groups the cycle's transactions by category and outputs a `JSON` payload for the frontend charting library.
+* **`generate_chart_data(cycle)`**: A private helper method that groups the cycle's transactions by category and outputs a `JSON` payload for the frontend charting library.
 
 ---
 
@@ -182,8 +188,8 @@ In Django, Forms are dedicated classes responsible for handling user input, vali
 **Description & Responsibility:**
 Validates the user input during the initial onboarding and budget setup phase. It ensures that the business rules are respected at the UI level before passing data to the `SetupView`.
 **Core Validations:**
-* Ensures the `totalAllowance` is a positive number.
-* Ensures the `endDate` strictly comes *after* the `startDate`.
+* Ensures the `total_allowance` is a positive number.
+* Ensures the `end_date` strictly comes *after* the `start_date`.
 
 ## 2. SettingsForm
 **Inherits from:** `Form`
