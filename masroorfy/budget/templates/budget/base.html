@@ -82,6 +82,16 @@
 <body>
     <nav>
         <h1>Masroofy<span>.</span></h1>
+        {% if user.is_authenticated %}
+        <span>Welcome, {{ user.username }}!</span>
+        <form method="post" action="{% url 'logout' %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit">Log Out</button>
+        </form>
+        {% else %}
+        <a href="{% url 'login' %}">Log In</a>
+        <a href="{% url 'signup' %}">Sign Up</a>
+        {% endif %}
     </nav>
     <div class="container">
         {% block content %}{% endblock %}

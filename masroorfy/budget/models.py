@@ -1,6 +1,8 @@
-from django.db import models
+from django.db import models, transaction
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.hashers import make_password, check_password
+from django.utils import timezone
+from django.core.validators import RegexValidator
 
 class AllowanceStatus(models.TextChoices):
     NORMAL = 'NORMAL', 'Normal'
@@ -15,33 +17,39 @@ class Category(models.TextChoices):
     OTHER = 'OTHER', 'Other'
     
 class User(AbstractUser):
-    hashed_pin = models.CharField(max_length=128, blank=True, null=True)
-    is_privacy_lock_enabled = models.BooleanField(default=False)
-    failed_attempts = models.IntegerField(default=0)
-
-    def set_pin(self, raw_pin: str):
-        self.hashed_pin = make_password(raw_pin)
-        self.save()
-
-    def verify_pin(self, raw_pin: str) -> bool:
-        return check_password(raw_pin, self.hashed_pin)
+    email = models.EmailField(unique=True)
+    username = models.CharField(
+        max_length=150,
+        unique=True,
+        blank=True,
+        null=True
+    )
     
-    def record_failed_attempt(self):
-        self.failed_attempts += 1
-        self.save()
-
-    def reset_failed_attempts(self):
-        self.failed_attempts = 0
-        self.save()
+    pin_validator = RegexValidator(r'^\d{4}$', 'PIN must be exactly 4 digits.')
+    
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']
+    
+    def __str__(self):
+        return self.email
 
 class BudgetCycleManager(models.Manager):
     def get_active_cycle(self, user):
-        #TODO
-        return self.filter(user=user, is_active=True).first()
+        return self.filter(user=user, is_active=True).order_by('-start_date').first()
 
     def create_cycle(self, user, allowance, start, end):
-        #TODO
-        pass
+        with transaction.atomic():
+            self.filter(user=user, is_active=True).update(is_active=False)
+            new_cycle = self.create(
+                user=user,
+                total_allowance = allowance,
+                remaining_cycle_balance = allowance,
+                spent_today = 0,
+                start_date = start,
+                end_date = end,
+                is_active = True
+            )
+        return new_cycle
 
 class BudgetCycle(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='budget_cycles')
@@ -57,9 +65,19 @@ class BudgetCycle(models.Model):
 
     #TODO
     def get_total_spent(self): pass
-    def get_remaining_balance(self): pass
-    def calculate_daily_limit(self): pass
-    def get_remaining_days(self): pass
+    
+    def get_remaining_balance(self):
+        return self.remaining_cycle_balance
+    
+    def calculate_daily_limit(self):
+        if self.get_remaining_days() <= 0:
+            return 0.00
+        
+        return self.get_remaining_balance() / self.get_remaining_days()
+    
+    def get_remaining_days(self):
+        return (self.end_date - timezone.now().date()).days + 1
+    
     def get_threshold_status(self): pass
     def is_final_day(self): pass
     def get_remaining_today(self): pass
