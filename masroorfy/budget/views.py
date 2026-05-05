@@ -47,7 +47,6 @@ class SetupView(LoginRequiredMixin, FormView):
     form_class = BudgetCycleForm
     template_name = 'budget/setup.html'
     
-    
     def form_valid(self, form):
         allowance = form.cleaned_data['total_allowance']
         start = form.cleaned_data['start_date']
