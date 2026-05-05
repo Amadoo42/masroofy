@@ -7,6 +7,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView
 from .forms import PinLoginForm, PinSignupForm
 from django.contrib import messages
+from django.db.models import Sum
+import json
+from decimal import Decimal, InvalidOperation
 
 
 class HistoryView(ListView):
@@ -105,18 +108,15 @@ class AppSignupView(CreateView):
             return redirect('dashboard')
         
         return super().dispatch(request, *args, **kwargs)
+            
+class DashboardView(LoginRequiredMixin,TemplateView):
 
-    
-class DashboardView(LoginRequiredMixin, TemplateView):
-    template_name = 'budget/dashboard.html'
+    template_name='budget/dashboard.html'
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        user = self.request.user
 
-        if not user.is_authenticated:
-            return context
-    
+        context=super().get_context_data(**kwargs)
+        user = self.request.user
         cycle = BudgetCycle.objects.get_active_cycle(user)
 
         if cycle:
@@ -125,7 +125,56 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 messages.error(self.request, "Budget exhausted! You have reached 100% of your allowance.")
             elif status == AllowanceStatus.HIGH_USAGE:
                 messages.warning(self.request, "Warning! You have used 80% of your allowance.")
-            
-            context['cycle'] = cycle
+       
+            context['cycle']=cycle
+            context['remaining_balance']=cycle.get_remaining_balance()
+            context['daily_limit']=cycle.calculate_daily_limit()
+            context['chart_data']=self.generate_chart_data(cycle)
+
+        context['categories']=Category.choices
         return context
-            
+    
+    def generate_chart_data(self,cycle):
+
+        results=(Transaction.objects
+                .filter(cycle=cycle)
+                .values('category')
+                .annotate(total=Sum('amount'))
+                )
+        labels=[]
+        data=[]
+
+        for entry in results:
+            labels.append(entry['category'].capitalize())
+            data.append(float(entry['total']))
+        return json.dumps({'labels':labels,'data':data})
+      
+    def post(self,request,*args,**kwargs):
+
+        active_cycle= BudgetCycle.objects.get_active_cycle(self.request.user)
+
+        if not active_cycle:
+            return redirect('setup')
+        amount= request.POST.get('amount')
+        category=request.POST.get('category')
+        note= request.POST.get('note','')
+
+        try:
+            amount= Decimal(amount)
+            if amount <=0:
+                raise ValueError
+        except(ValueError, TypeError, InvalidOperation):
+            messages.error(request,'Please enter a valid positive amount.')
+            return redirect('dashboard')
+        
+        Transaction.objects.create(
+            cycle=active_cycle,
+            category=category,
+            amount=amount,
+            note=note   
+        )
+        messages.success(request,'Expense logged successfully.')
+        return redirect('dashboard')
+
+
+        

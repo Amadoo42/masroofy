@@ -90,6 +90,7 @@ class BudgetCycle(models.Model):
             return AllowanceStatus.NORMAL
 
     def is_final_day(self): pass
+
     def get_remaining_today(self):
         from django.utils import timezone
         today = timezone.now().date()
@@ -98,8 +99,12 @@ class BudgetCycle(models.Model):
         else:
             spent_today = self.spent_today
         return self.calculate_daily_limit() - spent_today
-    
-    def update_balance(self, amount): pass
+
+    def update_balance(self, amount):
+        self.remaining_cycle_balance-=amount
+        self.spent_today+=amount
+        self.last_update_date=timezone.now().date()
+        self.save()
 
 class TransactionManager(models.Manager):
     def get_by_category(self, cycle, category):
@@ -122,8 +127,14 @@ class Transaction(models.Model):
         pass
 
     def save(self, *args, **kwargs):
-        #TODO: update_balance logic
-        super().save(*args, **kwargs)
+        if self.pk:
+            old_amount=Transaction.objects.get(pk=self.pk).amount
+            difference = self.amount-old_amount
+            super().save(*args, **kwargs)
+            self.cycle.update_balance(difference)
+        else:
+            super().save(*args, **kwargs)
+            self.cycle.update_balance(self.amount)  
 
     def delete(self, *args, **kwargs):
         #TODO: refund logic
