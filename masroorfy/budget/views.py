@@ -1,4 +1,4 @@
-from django.views.generic import ListView, FormView, CreateView
+from django.views.generic import ListView, FormView, CreateView, TemplateView
 from .models import Transaction, BudgetCycle, Category, AllowanceStatus
 from .forms import BudgetCycleForm
 from django.urls import reverse_lazy
@@ -107,7 +107,7 @@ class AppSignupView(CreateView):
         return super().dispatch(request, *args, **kwargs)
 
     
-class DashboardView(TemplateView):
+class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'budget/dashboard.html'
 
     def get_context_data(self, **kwargs):
