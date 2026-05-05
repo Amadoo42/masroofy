@@ -36,4 +36,13 @@
     {% endfor %}
 {% endif %}
 
+{% if cycle %}
+    <p>Active cycle found. Balance: {{ cycle.remaining_cycle_balance }} EGP</p>
+{% else %}
+    <div class="no-cycle">
+        <h2>No Active Budget Cycle.</h2>
+        <p>Set up your budget to get started.</p>
+    </div>
+{% endif %}
+
 {% endblock content %}
