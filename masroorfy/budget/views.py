@@ -1,5 +1,5 @@
 from django.views.generic import ListView, FormView, CreateView
-from .models import Transaction, BudgetCycle, Category
+from .models import Transaction, BudgetCycle, Category, AllowanceStatus
 from .forms import BudgetCycleForm
 from django.urls import reverse_lazy
 from django.shortcuts import render, redirect
@@ -105,7 +105,27 @@ class AppSignupView(CreateView):
             return redirect('dashboard')
         
         return super().dispatch(request, *args, **kwargs)
-    
 
-def dashboard(request):
-    return render(request, 'budget/dashboard.html')
+    
+class DashboardView(TemplateView):
+    template_name = 'budget/dashboard.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+
+        if not user.is_authenticated:
+            return context
+    
+        cycle = BudgetCycle.objects.get_active_cycle(user)
+
+        if cycle:
+            status = cycle.get_threshold_status()
+            if status == AllowanceStatus.LIMIT_REACHED:
+                messages.error(self.request, "Budget exhausted! You have reached 100% of your allowance.")
+            elif status == AllowanceStatus.HIGH_USAGE:
+                messages.warning(self.request, "Warning! You have used 80% of your allowance.")
+            
+            context['cycle'] = cycle
+        return context
+            
