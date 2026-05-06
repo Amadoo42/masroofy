@@ -50,7 +50,6 @@ class SetupView(LoginRequiredMixin, FormView):
     form_class = BudgetCycleForm
     template_name = 'budget/setup.html'
     
-    
     def form_valid(self, form):
         allowance = form.cleaned_data['total_allowance']
         start = form.cleaned_data['start_date']
@@ -96,7 +95,6 @@ class AppSignupView(CreateView):
     form_class = PinSignupForm
     template_name = 'budget/signup.html'
     success_url = reverse_lazy('login')
-    redirect_authenticated_user = True
     
     def form_valid(self, form):
         messages.success(self.request, 'Account created successfully')

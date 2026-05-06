@@ -50,16 +50,33 @@
             color: var(--accent-blood);
         }
 
+        /* Group the auth items together */
+        .nav-auth {
+            display: flex;
+            align-items: center;
+            gap: 1rem; /* Space between buttons */
+        }
+
+        .username-display {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
         .btn {
             background-color: transparent;
             color: var(--text-main);
             border: 1px solid var(--border-color);
-            padding: 0.5rem 1.5rem;
+            padding: 0.5rem 1.2rem;
             cursor: pointer;
             font-weight: bold;
+            font-family: inherit; /* Ensures same font as body */
+            font-size: 0.8rem;
+            text-transform: uppercase;
             transition: all 0.2s ease-in-out;
             text-decoration: none;
             display: inline-block;
+            outline: none;
         }
 
         .btn:hover {
@@ -75,24 +92,37 @@
 
         .btn-primary:hover {
             background-color: var(--accent-hover);
+            border-color: var(--accent-hover);
             color: #fff;
+        }
+
+        /* Specific fix for the logout form button to strip default styling */
+        .btn-link {
+            background: none;
+            border: 1px solid var(--border-color);
         }
     </style>
 </head>
 <body>
     <nav>
-        <h1>Masroofy<span>.</span></h1>
-        {% if user.is_authenticated %}
-        <span>Welcome, {{ user.username }}!</span>
-        <form method="post" action="{% url 'logout' %}" style="display:inline;">
-            {% csrf_token %}
-            <button type="submit">Log Out</button>
-        </form>
-        {% else %}
-        <a href="{% url 'login' %}">Log In</a>
-        <a href="{% url 'signup' %}">Sign Up</a>
-        {% endif %}
+        <a href="/" style="text-decoration: none;">
+            <h1>Masroofy<span>.</span></h1>
+        </a>
+        
+        <div class="nav-auth">
+            {% if user.is_authenticated %}
+                <span class="username-display">{{ user.username }}</span>
+                <form method="post" action="{% url 'logout' %}" style="margin: 0;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn">Log Out</button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}" class="btn">Log In</a>
+                <a href="{% url 'signup' %}" class="btn btn-primary">Sign Up</a>
+            {% endif %}
+        </div>
     </nav>
+
     <div class="container">
         {% block content %}{% endblock %}
     </div>

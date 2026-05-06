@@ -1,24 +1,109 @@
 {% extends 'budget/base.html' %}
 
+{% block title %}Login{% endblock %}
+
 {% block content %}
+<style>
+    .login-container {
+        max-width: 400px;
+        margin: 4rem auto;
+        padding: 2rem;
+        background-color: var(--surface-color);
+        border: 1px solid var(--border-color);
+        text-align: center;
+    }
+
+    .login-container h2 {
+        margin-top: 0;
+        margin-bottom: 2rem;
+        letter-spacing: 3px;
+        color: var(--text-main);
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+        text-align: left;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 0.75rem;
+        margin-bottom: 0.5rem;
+        color: var(--text-muted);
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 0.8rem;
+        background-color: var(--bg-color);
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+        box-sizing: border-box;
+        font-family: inherit;
+        outline: none;
+        transition: border-color 0.2s;
+    }
+
+    .form-group input:focus {
+        border-color: var(--accent-blood);
+    }
+
+    .error-msg {
+        color: var(--accent-blood);
+        font-size: 0.8rem;
+        margin-bottom: 1rem;
+        border: 1px solid var(--accent-blood);
+        padding: 0.5rem;
+        background: rgba(255, 42, 42, 0.1);
+    }
+
+    .footer-text {
+        text-align: center;
+        margin-top: 1.5rem;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+
+    .footer-text a {
+        color: var(--accent-blood);
+        text-decoration: none;
+    }
+
+    .footer-text a:hover {
+        text-decoration: underline;
+    }
+
+    .btn-block {
+        width: 100%;
+        margin-top: 1rem;
+    }
+</style>
+
 <div class="login-container">
-        <h2>Enter App</h2>
-        <form method="post">
-            {% csrf_token %}
-            <div>
-                {{ form.username.label_tag }}
-                {{ form.username }}
-            </div>
-            <div>
-                {{ form.password.label_tag }}
-                {{ form.password }}
-            </div>
-            <button type="submit">Unlock</button>
-        </form>
+    <h2>Enter App</h2>
+    
+    {% if form.errors %}
+        <div class="error-msg">
+            ACCESS DENIED. CHECK CREDENTIALS.
+        </div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="{{ form.username.id_for_label }}">{{ form.username.label }}</label>
+            {{ form.username }}
+        </div>
+        <div class="form-group">
+            <label for="{{ form.password.id_for_label }}">{{ form.password.label }}</label>
+            {{ form.password }}
+        </div>
         
-        {% if form.errors %}
-            <p style="color: red;">Invalid email or PIN. Please try again.</p>
-        {% endif %}
+        <button type="submit" class="btn btn-primary btn-block">Unlock</button>
+    </form>
+
+    <div class="footer-text">
+        Don't have an account? <a href="{% url 'signup' %}">Sign up here</a>.
     </div>
-    <p>Don't have an account? <a href="{% url 'signup' %}">Sign up here</a>.</p>
+</div>
 {% endblock content %}
