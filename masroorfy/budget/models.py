@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.hashers import make_password, check_password
 from django.utils import timezone
 from django.core.validators import RegexValidator
+from decimal import Decimal
 
 class AllowanceStatus(models.TextChoices):
     NORMAL = 'NORMAL', 'Normal'
@@ -20,12 +21,9 @@ class User(AbstractUser):
     email = models.EmailField(unique=True)
     username = models.CharField(
         max_length=150,
-        unique=True,
-        blank=True,
-        null=True
+        blank=False,
+        null=False
     )
-    
-    pin_validator = RegexValidator(r'^\d{4}$', 'PIN must be exactly 4 digits.')
     
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
@@ -72,12 +70,12 @@ class BudgetCycle(models.Model):
     
     def calculate_daily_limit(self):
         if self.get_remaining_days() <= 0:
-            return 0.00
+            return Decimal('0.00')
         
         return self.get_remaining_balance() / self.get_remaining_days()
     
     def get_remaining_days(self):
-        return (self.end_date - timezone.now().date()).days + 1
+        return (self.end_date - timezone.localdate()).days + 1
     
     def get_threshold_status(self):
         total_spent = self.get_total_spent()

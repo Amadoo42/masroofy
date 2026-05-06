@@ -13,7 +13,7 @@ class BudgetCycleForm(forms.ModelForm):
     )
     
     start_date = forms.DateField(
-        initial=timezone.now,
+        initial=timezone.localdate,
         widget=forms.DateInput(attrs={'type':'date'})
     )
     
@@ -36,9 +36,9 @@ class BudgetCycleForm(forms.ModelForm):
             raise forms.ValidationError(
                 "The end date must be after the start date"
             )
-        if allowance < 1:
+        if allowance is not None and allowance < 1:
             raise forms.ValidationError(
-                "Allowance must be postive and greater than 0"
+                "Allowance must be positive and greater than 0"
             )
             
         return cleaned_data
@@ -97,3 +97,7 @@ class PinSignupForm(UserCreationForm):
         super().__init__(*args, **kwargs)
         
         self.fields['password1'].help_text = "Enter a 4-Digit PIN"
+    
+    def clean_username(self):
+        return self.cleaned_data.get('username') 
+       

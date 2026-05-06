@@ -1,12 +1,141 @@
 {% extends 'budget/base.html' %}
 
-{% block content %}
-<h2>Create an Account</h2>
-<form method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Sign Up</button>
-</form>
+{% block title %}Sign Up{% endblock %}
 
-<p>Already have an account? <a href="{% url 'login' %}">Log in here</a>.</p>
+{% block content %}
+<style>
+    .auth-container {
+        max-width: 400px;
+        margin: 4rem auto;
+        padding: 2rem;
+        background-color: var(--surface-color);
+        border: 1px solid var(--border-color);
+        text-align: center;
+    }
+
+    .auth-container h2 {
+        margin-top: 0;
+        margin-bottom: 2rem;
+        letter-spacing: 3px;
+        color: var(--text-main);
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+        text-align: left;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 0.75rem;
+        margin-bottom: 0.5rem;
+        color: var(--text-muted);
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 0.8rem;
+        background-color: var(--bg-color);
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+        box-sizing: border-box;
+        font-family: inherit;
+        outline: none;
+        transition: border-color 0.2s;
+    }
+
+    .form-group input:focus {
+        border-color: var(--accent-blood);
+    }
+
+    .helptext {
+        display: block;
+        font-size: 0.65rem;
+        color: var(--text-muted);
+        margin-top: 0.5rem;
+        line-height: 1.4;
+        text-transform: none;
+    }
+    
+    .helptext ul {
+        padding-left: 1rem;
+        margin-top: 0.2rem;
+        margin-bottom: 0;
+    }
+
+    .field-error {
+        color: var(--accent-blood);
+        font-size: 0.75rem;
+        margin-top: 0.5rem;
+        font-weight: bold;
+    }
+
+    .general-error {
+        border: 1px solid var(--accent-blood);
+        padding: 0.5rem;
+        background: rgba(255, 42, 42, 0.1);
+        margin-bottom: 1.5rem;
+        color: var(--accent-blood);
+        font-size: 0.8rem;
+    }
+
+    .footer-text {
+        text-align: center;
+        margin-top: 1.5rem;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+
+    .footer-text a {
+        color: var(--accent-blood);
+        text-decoration: none;
+    }
+
+    .footer-text a:hover {
+        text-decoration: underline;
+    }
+
+    .btn-block {
+        width: 100%;
+        margin-top: 1rem;
+    }
+</style>
+
+<div class="auth-container">
+    <h2>Join Masroofy</h2>
+    
+    {% if form.non_field_errors %}
+        <div class="general-error">
+            {{ form.non_field_errors|striptags }}
+        </div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        
+        {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                
+                {{ field }}
+                
+                {% if field.help_text %}
+                    <span class="helptext">{{ field.help_text|safe }}</span>
+                {% endif %}
+                
+                {% if field.errors %}
+                    <div class="field-error">
+                        {{ field.errors|striptags }}
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+        
+        <button type="submit" class="btn btn-primary btn-block">Sign Up</button>
+    </form>
+
+    <div class="footer-text">
+        Already have an account? <a href="{% url 'login' %}">Log in here</a>.
+    </div>
+</div>
 {% endblock content %}
