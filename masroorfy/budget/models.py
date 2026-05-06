@@ -1,9 +1,8 @@
 from django.db import models, transaction
 from django.db.models import F
 from django.contrib.auth.models import AbstractUser
-from django.contrib.auth.hashers import make_password, check_password
 from django.utils import timezone
-from django.core.validators import RegexValidator
+from django.core.validators import RegexValidator, MinValueValidator
 from decimal import Decimal
 from django.core.exceptions import ValidationError
 from .models import Category
@@ -54,7 +53,7 @@ class BudgetCycleManager(models.Manager):
 
 class BudgetCycle(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='budget_cycles')
-    total_allowance = models.DecimalField(max_digits=10, decimal_places=2)
+    total_allowance = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0.01)])
     remaining_cycle_balance = models.DecimalField(max_digits=10, decimal_places=2)
     spent_today = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     last_update_date = models.DateField(auto_now_add=True)
@@ -64,6 +63,15 @@ class BudgetCycle(models.Model):
 
     objects = BudgetCycleManager()
 
+    def clean(self):
+        if self.end_date <= self.start_date:
+            raise ValidationError({'end_date': 'End date must be after start date.'})
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    #TODO
     def get_total_spent(self):
         return self.total_allowance - self.remaining_cycle_balance
     

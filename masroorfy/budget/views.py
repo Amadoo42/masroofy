@@ -1,4 +1,5 @@
 from django.views.generic import ListView, FormView, CreateView, TemplateView
+from django.shortcuts import redirect
 from .models import Transaction, BudgetCycle, Category, AllowanceStatus
 from .forms import BudgetCycleForm
 from django.urls import reverse_lazy
@@ -12,32 +13,35 @@ import json
 from decimal import Decimal, InvalidOperation
 
 
-class HistoryView(ListView):
+class HistoryView(LoginRequiredMixin, ListView):
     model = Transaction
     template_name = 'budget/history.html'
     context_object_name = 'transactions'
 
+    def dispatch(self, request, *args, **kwargs):
+        user = self.request.user
+        if user.is_authenticated:
+            if not BudgetCycle.objects.get_active_cycle(user):
+                return redirect('setup')
+        return super().dispatch(request, *args, **kwargs)
+
     def get_queryset(self):
         user = self.request.user
-        if not user.is_authenticated:
-            return Transaction.objects.none()
         
         active_cycle = BudgetCycle.objects.get_active_cycle(user)
-        if not active_cycle:
-            return Transaction.objects.none()
 
-        queryset = Transaction.objects.filter(cycle=active_cycle).order_by('-timestamp')
+        queryset = Transaction.objects.filter(cycle=active_cycle)
 
         category_filter = self.request.GET.get('category')
         date_filter = self.request.GET.get('date')
 
         if category_filter:
-            queryset = Transaction.objects.get_by_category(active_cycle, category_filter)
+            queryset = queryset & Transaction.objects.get_by_category(active_cycle, category_filter)
 
         if date_filter:
-            queryset = Transaction.objects.get_by_date(active_cycle, date_filter)
+            queryset = queryset & Transaction.objects.get_by_date(active_cycle, date_filter)
 
-        return queryset
+        return queryset.order_by('-timestamp')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -111,25 +115,36 @@ class DashboardView(LoginRequiredMixin,TemplateView):
 
     template_name='budget/dashboard.html'
 
-    def get_context_data(self, **kwargs):
-
-        context=super().get_context_data(**kwargs)
+    def dispatch(self, request, *args, **kwargs):
         user = self.request.user
-        cycle = BudgetCycle.objects.get_active_cycle(user)
+        if user.is_authenticated:
+            if not BudgetCycle.objects.get_active_cycle(user):
+                return redirect('setup')
+        return super().dispatch(request, *args, **kwargs)
 
-        if cycle:
-            status = cycle.get_threshold_status()
+    def get(self, request, *args, **kwargs):
+        self.cycle = BudgetCycle.objects.get_active_cycle(request.user)
+        
+        if self.cycle:
+            status = self.cycle.get_threshold_status()
             if status == AllowanceStatus.LIMIT_REACHED:
                 messages.error(self.request, "Budget exhausted! You have reached 100% of your allowance.")
             elif status == AllowanceStatus.HIGH_USAGE:
                 messages.warning(self.request, "Warning! You have used 80% of your allowance.")
-       
-            context['cycle']=cycle
-            context['remaining_balance']=cycle.get_remaining_balance()
-            context['daily_limit']=cycle.calculate_daily_limit()
-            context['chart_data']=self.generate_chart_data(cycle)
+                
+        return super().get(request, *args, **kwargs)
 
-        context['categories']=Category.choices
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        cycle = getattr(self, 'cycle', None)
+        
+        if cycle:
+            context['cycle'] = cycle
+            context['remaining_balance'] = cycle.get_remaining_balance()
+            context['daily_limit'] = cycle.calculate_daily_limit()
+            context['chart_data'] = self.generate_chart_data(cycle)
+
+        context['categories'] = Category.choices
         return context
     
     def generate_chart_data(self,cycle):
