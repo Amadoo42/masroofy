@@ -92,7 +92,6 @@ class AppSignupView(CreateView):
     form_class = PinSignupForm
     template_name = 'budget/signup.html'
     success_url = reverse_lazy('login')
-    redirect_authenticated_user = True
     
     def form_valid(self, form):
         messages.success(self.request, 'Account created successfully')
