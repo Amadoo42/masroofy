@@ -153,6 +153,7 @@ class DashboardView(LoginRequiredMixin,TemplateView):
 
         if not active_cycle:
             return redirect('setup')
+            
         amount= request.POST.get('amount')
         category=request.POST.get('category')
         note= request.POST.get('note','')

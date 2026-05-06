@@ -120,17 +120,6 @@
     }
 </style>
 
-<!-- Threshold alerts-->
-{% if messages %}
-   {% for message in messages %}
-        {% if message.tags == 'error' %}
-<div class="alert alert-error"> {{ message }}</div>
-    {% elif message.tags == 'warning' %}
-<div class="alert alert-warning"> {{ message }}</div>
-        {% endif %}
-    {% endfor %}
-{% endif %}
-
 <!-- Remaining Balance & Safe Daily Limit card html-->
 {% if cycle %}
 <div class="dashboard-grid">
@@ -145,13 +134,12 @@
 </div>
 {% endif %}
 
-<!-- log transaction part -->
 {% if messages %}
-<div class="messages">
+<div class="messages" style="margin-bottom: 2rem;">
     {% for message in messages %}
-        <p class="{% if message.tags == 'success' %}message-success{% else %}message-error{% endif %}">
+        <div class="alert {% if message.tags == 'error' %}alert-error{% elif message.tags == 'warning' %}alert-warning{% elif message.tags == 'success' %}message-success{% else %}alert-info{% endif %}">
             {{ message }}
-        </p>
+        </div>
     {% endfor %}
 </div>
 {% endif %}

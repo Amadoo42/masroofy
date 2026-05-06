@@ -1,9 +1,12 @@
 from django.db import models, transaction
+from django.db.models import F
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.hashers import make_password, check_password
 from django.utils import timezone
 from django.core.validators import RegexValidator
 from decimal import Decimal
+from django.core.exceptions import ValidationError
+from .models import Category
 
 class AllowanceStatus(models.TextChoices):
     NORMAL = 'NORMAL', 'Normal'
@@ -61,7 +64,6 @@ class BudgetCycle(models.Model):
 
     objects = BudgetCycleManager()
 
-    #TODO
     def get_total_spent(self):
         return self.total_allowance - self.remaining_cycle_balance
     
@@ -90,18 +92,28 @@ class BudgetCycle(models.Model):
     def is_final_day(self): pass
 
     def get_remaining_today(self):
-        from django.utils import timezone
         today = timezone.now().date()
+
         if today != self.last_update_date:
             spent_today = 0
         else:
             spent_today = self.spent_today
+
         return self.calculate_daily_limit() - spent_today
 
-    def update_balance(self, amount):
-        self.remaining_cycle_balance-=amount
-        self.spent_today+=amount
-        self.last_update_date=timezone.now().date()
+    def update_balance(self, amount, transaction_date):
+        today = timezone.now().date()
+
+        self.remaining_cycle_balance = F('remaining_cycle_balance') - amount
+
+        if transaction_date == today:
+            if self.last_update_date != today:
+                self.spent_today = amount
+            else:
+                self.spent_today = F('spent_today') + amount
+        
+        self.last_update_date = today
+
         self.save()
 
 class TransactionManager(models.Manager):
@@ -121,19 +133,26 @@ class Transaction(models.Model):
     objects = TransactionManager()
 
     def clean(self):
-        #TODO: validation logic
-        pass
+        if self.amount is None or self.amount <= 0:
+            raise ValidationError({'amount': 'Amount must be greater than zero.'})
+        if self.category not in Category.values:
+            raise ValidationError({'category': f'Invalid category. Must be one of: {Category.values}'})
 
     def save(self, *args, **kwargs):
-        if self.pk:
-            old_amount=Transaction.objects.get(pk=self.pk).amount
-            difference = self.amount-old_amount
-            super().save(*args, **kwargs)
-            self.cycle.update_balance(difference)
-        else:
-            super().save(*args, **kwargs)
-            self.cycle.update_balance(self.amount)  
+        self.full_clean()
+        with transaction.atomic():
+            tx_date = self.timestamp.date() if self.timestamp else timezone.now().date()
+
+            if self.pk:
+                old_amount = Transaction.objects.select_for_update().get(pk=self.pk).amount
+                difference = self.amount - old_amount
+                super().save(*args, **kwargs)
+                self.cycle.update_balance(difference, tx_date)
+            else:
+                super().save(*args, **kwargs)
+                self.cycle.update_balance(self.amount, tx_date)  
 
     def delete(self, *args, **kwargs):
-        #TODO: refund logic
-        super().delete(*args, **kwargs)
+        with transaction.atomic():
+            self.cycle.update_balance(-self.amount, self.timestamp.date())
+            super().delete(*args, **kwargs)
