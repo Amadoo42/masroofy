@@ -1,4 +1,5 @@
 from django.views.generic import ListView, FormView, CreateView
+from django.shortcuts import redirect
 from .models import Transaction, BudgetCycle, Category
 from .forms import BudgetCycleForm
 from django.urls import reverse_lazy
@@ -13,6 +14,13 @@ class HistoryView(LoginRequiredMixin, ListView):
     model = Transaction
     template_name = 'budget/history.html'
     context_object_name = 'transactions'
+
+    def dispatch(self, request, *args, **kwargs):
+        user = self.request.user
+        if user.is_authenticated:
+            if not BudgetCycle.objects.get_active_cycle(user):
+                return redirect('setup')
+        return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
         user = self.request.user
