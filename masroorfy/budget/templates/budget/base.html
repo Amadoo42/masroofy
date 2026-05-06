@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Masroofy | {% block title %}{% endblock %}</title>
+    <style>
+        :root {
+            --bg-color: #050505;
+            --surface-color: #121212;
+            --border-color: #333333;
+            --text-main: #f0f0f0;
+            --text-muted: #888888;
+            --accent-blood: #ff2a2a;
+            --accent-hover: #cc0000;
+        }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            text-transform: uppercase; 
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        nav {
+            border-bottom: 2px solid var(--accent-blood);
+            padding: 1rem 2rem;
+            background-color: var(--surface-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        nav h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+            color: var(--text-main);
+        }
+
+        nav h1 span {
+            color: var(--accent-blood);
+        }
+
+        .btn {
+            background-color: transparent;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1.5rem;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s ease-in-out;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            border-color: var(--accent-blood);
+            color: var(--accent-blood);
+        }
+
+        .btn-primary {
+            background-color: var(--accent-blood);
+            color: #fff;
+            border-color: var(--accent-blood);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-hover);
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <h1>Masroofy<span>.</span></h1>
+    </nav>
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>
