@@ -6,7 +6,7 @@ from django.core.validators import RegexValidator
 
 class BudgetCycleForm(forms.ModelForm):
     total_allowance = forms.DecimalField(
-        min_value=1,
+        min_value=0.01,
         max_digits=10,
         decimal_places=2,
         help_text='Enter a positive amount'
