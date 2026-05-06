@@ -144,6 +144,7 @@ class DashboardView(LoginRequiredMixin,TemplateView):
             context['remaining_balance'] = cycle.get_remaining_balance()
             context['daily_limit'] = cycle.calculate_daily_limit()
             context['chart_data'] = self.generate_chart_data(cycle)
+            context['is_final'] = cycle.is_final_day()
 
         context['categories'] = Category.choices
         return context
