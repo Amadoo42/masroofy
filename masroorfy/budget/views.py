@@ -108,22 +108,27 @@ class AppSignupView(CreateView):
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'budget/dashboard.html'
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+    def dispatch(self, request, *args, **kwargs):
         user = self.request.user
+        if user.is_authenticated:
+            if not BudgetCycle.objects.get_active_cycle(user):
+                return redirect('setup')
+        return super().dispatch(request, *args, **kwargs)
 
-        if not user.is_authenticated:
-            return context
-    
-        cycle = BudgetCycle.objects.get_active_cycle(user)
-
-        if cycle:
-            status = cycle.get_threshold_status()
+    def get(self, request, *args, **kwargs):
+        self.cycle = BudgetCycle.objects.get_active_cycle(request.user)
+        
+        if self.cycle:
+            status = self.cycle.get_threshold_status()
             if status == AllowanceStatus.LIMIT_REACHED:
                 messages.error(self.request, "Budget exhausted! You have reached 100% of your allowance.")
             elif status == AllowanceStatus.HIGH_USAGE:
                 messages.warning(self.request, "Warning! You have used 80% of your allowance.")
-            
-            context['cycle'] = cycle
+                
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['cycle'] = getattr(self, 'cycle', None)
         return context
             

@@ -89,7 +89,6 @@ class BudgetCycle(models.Model):
 
     def is_final_day(self): pass
     def get_remaining_today(self):
-        from django.utils import timezone
         today = timezone.now().date()
         if today != self.last_update_date:
             spent_today = 0
