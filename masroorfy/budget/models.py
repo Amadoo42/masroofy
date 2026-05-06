@@ -1,11 +1,9 @@
 from django.db import models, transaction
-from django.db.models import F
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 from django.core.validators import RegexValidator, MinValueValidator
 from decimal import Decimal
 from django.core.exceptions import ValidationError
-from .models import Category
 
 class AllowanceStatus(models.TextChoices):
     NORMAL = 'NORMAL', 'Normal'
@@ -71,7 +69,6 @@ class BudgetCycle(models.Model):
         self.full_clean()
         super().save(*args, **kwargs)
 
-    #TODO
     def get_total_spent(self):
         return self.total_allowance - self.remaining_cycle_balance
     
@@ -97,6 +94,7 @@ class BudgetCycle(models.Model):
         else:
             return AllowanceStatus.NORMAL
 
+    #TODO
     def is_final_day(self): pass
 
     def get_remaining_today(self):
@@ -112,17 +110,20 @@ class BudgetCycle(models.Model):
     def update_balance(self, amount, transaction_date):
         today = timezone.now().date()
 
-        self.remaining_cycle_balance = F('remaining_cycle_balance') - amount
+        with transaction.atomic():
+            cycle = BudgetCycle.objects.select_for_update().get(pk=self.pk)
+            cycle.remaining_cycle_balance -= amount
 
-        if transaction_date == today:
-            if self.last_update_date != today:
-                self.spent_today = amount
-            else:
-                self.spent_today = F('spent_today') + amount
-        
-        self.last_update_date = today
+            if transaction_date == today:
+                if cycle.last_update_date != today:
+                    cycle.spent_today = amount
+                    cycle.last_update_date = today
+                else:
+                    cycle.spent_today += amount
 
-        self.save()
+            cycle.save()
+
+        self.refresh_from_db()
 
 class TransactionManager(models.Manager):
     def get_by_category(self, cycle, category):

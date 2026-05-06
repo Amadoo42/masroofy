@@ -11,6 +11,7 @@ from django.contrib import messages
 from django.db.models import Sum
 import json
 from decimal import Decimal, InvalidOperation
+from django.core.exceptions import ValidationError
 
 
 class HistoryView(LoginRequiredMixin, ListView):
@@ -181,14 +182,17 @@ class DashboardView(LoginRequiredMixin,TemplateView):
             messages.error(request,'Please enter a valid positive amount.')
             return redirect('dashboard')
         
-        Transaction.objects.create(
-            cycle=active_cycle,
-            category=category,
-            amount=amount,
-            note=note   
-        )
+        try:
+            Transaction.objects.create(
+                cycle=active_cycle,
+                category=category,
+                amount=amount,
+                note=note   
+            )
+        except ValidationError as e:
+            error_msg = " ".join([f"{msg}" for messages_list in e.message_dict.values() for msg in messages_list]) if hasattr(e, 'message_dict') else str(e)
+            messages.error(request, f'Invalid submission: {error_msg}')
+            return redirect('dashboard')
+            
         messages.success(request,'Expense logged successfully.')
         return redirect('dashboard')
-
-
-        
