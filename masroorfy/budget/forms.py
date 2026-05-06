@@ -6,7 +6,7 @@ from django.core.validators import RegexValidator
 
 class BudgetCycleForm(forms.ModelForm):
     total_allowance = forms.DecimalField(
-        min_value=1,
+        min_value=0.01,
         max_digits=10,
         decimal_places=2,
         help_text='Enter a positive amount'
@@ -30,17 +30,12 @@ class BudgetCycleForm(forms.ModelForm):
         
         start = cleaned_data.get('start_date')
         end = cleaned_data.get('end_date')
-        allowance = cleaned_data.get('total_allowance')
         
         if start and end and start >= end:
             raise forms.ValidationError(
                 "The end date must be after the start date"
             )
-        if allowance is not None and allowance < 1:
-            raise forms.ValidationError(
-                "Allowance must be positive and greater than 0"
-            )
-            
+
         return cleaned_data
     
 class PinLoginForm(AuthenticationForm):
