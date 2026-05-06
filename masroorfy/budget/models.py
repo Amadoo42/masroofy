@@ -69,7 +69,6 @@ class BudgetCycle(models.Model):
         self.full_clean()
         super().save(*args, **kwargs)
 
-    #TODO
     def get_total_spent(self):
         return self.total_allowance - self.remaining_cycle_balance
     
@@ -95,16 +94,36 @@ class BudgetCycle(models.Model):
         else:
             return AllowanceStatus.NORMAL
 
+    #TODO
     def is_final_day(self): pass
+
     def get_remaining_today(self):
         today = timezone.now().date()
+
         if today != self.last_update_date:
             spent_today = 0
         else:
             spent_today = self.spent_today
+
         return self.calculate_daily_limit() - spent_today
-    
-    def update_balance(self, amount): pass
+
+    def update_balance(self, amount, transaction_date):
+        today = timezone.now().date()
+
+        with transaction.atomic():
+            cycle = BudgetCycle.objects.select_for_update().get(pk=self.pk)
+            cycle.remaining_cycle_balance -= amount
+
+            if transaction_date == today:
+                if cycle.last_update_date != today:
+                    cycle.spent_today = amount
+                    cycle.last_update_date = today
+                else:
+                    cycle.spent_today += amount
+
+            cycle.save()
+
+        self.refresh_from_db()
 
 class TransactionManager(models.Manager):
     def get_by_category(self, cycle, category):
@@ -123,13 +142,26 @@ class Transaction(models.Model):
     objects = TransactionManager()
 
     def clean(self):
-        #TODO: validation logic
-        pass
+        if self.amount is None or self.amount <= 0:
+            raise ValidationError({'amount': 'Amount must be greater than zero.'})
+        if self.category not in Category.values:
+            raise ValidationError({'category': f'Invalid category. Must be one of: {Category.values}'})
 
     def save(self, *args, **kwargs):
-        #TODO: update_balance logic
-        super().save(*args, **kwargs)
+        self.full_clean()
+        with transaction.atomic():
+            tx_date = self.timestamp.date() if self.timestamp else timezone.now().date()
+
+            if self.pk:
+                old_amount = Transaction.objects.select_for_update().get(pk=self.pk).amount
+                difference = self.amount - old_amount
+                super().save(*args, **kwargs)
+                self.cycle.update_balance(difference, tx_date)
+            else:
+                super().save(*args, **kwargs)
+                self.cycle.update_balance(self.amount, tx_date)  
 
     def delete(self, *args, **kwargs):
-        #TODO: refund logic
-        super().delete(*args, **kwargs)
+        with transaction.atomic():
+            self.cycle.update_balance(-self.amount, self.timestamp.date())
+            super().delete(*args, **kwargs)
