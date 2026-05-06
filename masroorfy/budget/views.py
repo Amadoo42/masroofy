@@ -1,32 +1,29 @@
 from django.views.generic import ListView
 from .models import Transaction, BudgetCycle, Category
+from django.contrib.auth.mixins import LoginRequiredMixin
 
-class HistoryView(ListView):
+class HistoryView(LoginRequiredMixin, ListView):
     model = Transaction
     template_name = 'budget/history.html'
     context_object_name = 'transactions'
 
     def get_queryset(self):
         user = self.request.user
-        if not user.is_authenticated:
-            return Transaction.objects.none()
         
         active_cycle = BudgetCycle.objects.get_active_cycle(user)
-        if not active_cycle:
-            return Transaction.objects.none()
 
-        queryset = Transaction.objects.filter(cycle=active_cycle).order_by('-timestamp')
+        queryset = Transaction.objects.filter(cycle=active_cycle)
 
         category_filter = self.request.GET.get('category')
         date_filter = self.request.GET.get('date')
 
         if category_filter:
-            queryset = Transaction.objects.get_by_category(active_cycle, category_filter)
+            queryset = queryset & Transaction.objects.get_by_category(active_cycle, category_filter)
 
         if date_filter:
-            queryset = Transaction.objects.get_by_date(active_cycle, date_filter)
+            queryset = queryset & Transaction.objects.get_by_date(active_cycle, date_filter)
 
-        return queryset
+        return queryset.order_by('-timestamp')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
