@@ -2,4 +2,47 @@
 
 {% block content %}
 <h1>dashboard</h1>
+
+<style>
+    .alert {
+        padding: 1rem 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--border-color);
+        font-weight: bold;
+        letter-spacing: 1px;
+    }
+
+    .alert-warning {
+        border-color: #ff9900;
+        color: #ff9900;
+        background-color: #1a1400;
+    }
+
+    .alert-error {
+        border-color: var(--accent-blood);
+        color: var(--accent-blood);
+        background-color: #1a0000;
+    }
+</style>
+
+
+{% if messages %}
+    {% for message in messages %}
+        {% if message.tags == 'error' %}
+            <div class="alert alert-error"> {{ message }}</div>
+        {% elif message.tags == 'warning' %}
+            <div class="alert alert-warning"> {{ message }}</div>
+        {% endif %}
+    {% endfor %}
+{% endif %}
+
+{% if cycle %}
+    <p>Active cycle found. Balance: {{ cycle.remaining_cycle_balance }} EGP</p>
+{% else %}
+    <div class="no-cycle">
+        <h2>No Active Budget Cycle.</h2>
+        <p>Set up your budget to get started.</p>
+    </div>
+{% endif %}
+
 {% endblock content %}

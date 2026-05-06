@@ -70,7 +70,8 @@ class BudgetCycle(models.Model):
         super().save(*args, **kwargs)
 
     #TODO
-    def get_total_spent(self): pass
+    def get_total_spent(self):
+        return self.total_allowance - self.remaining_cycle_balance
     
     def get_remaining_balance(self):
         return self.remaining_cycle_balance
@@ -84,9 +85,25 @@ class BudgetCycle(models.Model):
     def get_remaining_days(self):
         return (self.end_date - timezone.localdate()).days + 1
     
-    def get_threshold_status(self): pass
+    def get_threshold_status(self):
+        total_spent = self.get_total_spent()
+        use_percent = (total_spent / self.total_allowance) * 100
+        if use_percent >= 100:
+            return AllowanceStatus.LIMIT_REACHED
+        elif use_percent >= 80:
+            return AllowanceStatus.HIGH_USAGE
+        else:
+            return AllowanceStatus.NORMAL
+
     def is_final_day(self): pass
-    def get_remaining_today(self): pass
+    def get_remaining_today(self):
+        today = timezone.now().date()
+        if today != self.last_update_date:
+            spent_today = 0
+        else:
+            spent_today = self.spent_today
+        return self.calculate_daily_limit() - spent_today
+    
     def update_balance(self, amount): pass
 
 class TransactionManager(models.Manager):
