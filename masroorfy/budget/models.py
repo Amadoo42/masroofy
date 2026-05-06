@@ -94,8 +94,8 @@ class BudgetCycle(models.Model):
         else:
             return AllowanceStatus.NORMAL
 
-    #TODO
-    def is_final_day(self): pass
+    def is_final_day(self):
+        return (timezone.localdate() == self.end_date)
 
     def get_remaining_today(self):
         today = timezone.now().date()
