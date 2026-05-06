@@ -50,11 +50,35 @@
             color: var(--accent-blood);
         }
 
-        /* Group the auth items together */
         .nav-auth {
             display: flex;
             align-items: center;
-            gap: 1rem; /* Space between buttons */
+            gap: 1rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-item {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            transition: color 0.2s ease-in-out;
+        }
+
+        .nav-item:hover {
+            color: var(--text-main);
+        }
+
+        .nav-item.active {
+            color: var(--accent-blood);
+            border-bottom: 2px solid var(--accent-blood);
+            padding-bottom: 0.2rem;
         }
 
         .username-display {
@@ -70,7 +94,7 @@
             padding: 0.5rem 1.2rem;
             cursor: pointer;
             font-weight: bold;
-            font-family: inherit; /* Ensures same font as body */
+            font-family: inherit;
             font-size: 0.8rem;
             text-transform: uppercase;
             transition: all 0.2s ease-in-out;
@@ -96,7 +120,6 @@
             color: #fff;
         }
 
-        /* Specific fix for the logout form button to strip default styling */
         .btn-link {
             background: none;
             border: 1px solid var(--border-color);
@@ -105,16 +128,23 @@
 </head>
 <body>
     <nav>
-        <a href="/" style="text-decoration: none;">
+        <a href="{% if user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'login' %}{% endif %}" style="text-decoration: none;">
             <h1>Masroofy<span>.</span></h1>
         </a>
+        
+        {% if user.is_authenticated %}
+        <div class="nav-links">
+            <a href="{% url 'dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">Dashboard</a>
+            <a href="{% url 'history' %}" class="nav-item {% if request.resolver_match.url_name == 'history' %}active{% endif %}">History</a>
+        </div>
+        {% endif %}
         
         <div class="nav-auth">
             {% if user.is_authenticated %}
                 <span class="username-display">{{ user.username }}</span>
                 <form method="post" action="{% url 'logout' %}" style="margin: 0;">
                     {% csrf_token %}
-                    <button type="submit" class="btn">Log Out</button>
+                    <button type="submit" class="btn btn-link">Log Out</button>
                 </form>
             {% else %}
                 <a href="{% url 'login' %}" class="btn">Log In</a>
