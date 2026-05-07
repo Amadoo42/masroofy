@@ -152,6 +152,8 @@ class Transaction(models.Model):
         with transaction.atomic():
             tx_date = self.timestamp.date() if self.timestamp else timezone.now().date()
 
+            old_status = self.cycle.get_threshold_status() if self.cycle else AllowanceStatus.NORMAL
+
             if self.pk:
                 old_amount = Transaction.objects.select_for_update().get(pk=self.pk).amount
                 difference = self.amount - old_amount
@@ -161,7 +163,33 @@ class Transaction(models.Model):
                 super().save(*args, **kwargs)
                 self.cycle.update_balance(self.amount, tx_date)  
 
+            new_status = self.cycle.get_threshold_status()
+
+            if old_status != new_status:
+                if new_status == AllowanceStatus.HIGH_USAGE:
+                    Notification.objects.create(
+                        user=self.cycle.user,
+                        message="Warning! You have used 80% of your allowance for this cycle."
+                    )
+                elif new_status == AllowanceStatus.LIMIT_REACHED:
+                    Notification.objects.create(
+                        user=self.cycle.user, 
+                        message="Critical! Budget exhausted. You have reached 100% of your allowance."
+                    )
+
     def delete(self, *args, **kwargs):
         with transaction.atomic():
             self.cycle.update_balance(-self.amount, self.timestamp.date())
             super().delete(*args, **kwargs)
+
+class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    message = models.CharField(max_length=255)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.message}"

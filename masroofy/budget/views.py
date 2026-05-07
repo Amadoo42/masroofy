@@ -1,6 +1,6 @@
 from django.views.generic import ListView, FormView, CreateView, TemplateView
 from django.shortcuts import redirect
-from .models import Transaction, BudgetCycle, Category, AllowanceStatus
+from .models import Transaction, BudgetCycle, Category, AllowanceStatus, Notification
 from .forms import BudgetCycleForm
 from django.urls import reverse_lazy
 from django.shortcuts import render, redirect
@@ -125,14 +125,6 @@ class DashboardView(LoginRequiredMixin,TemplateView):
 
     def get(self, request, *args, **kwargs):
         self.cycle = BudgetCycle.objects.get_active_cycle(request.user)
-        
-        if self.cycle:
-            status = self.cycle.get_threshold_status()
-            if status == AllowanceStatus.LIMIT_REACHED:
-                messages.error(self.request, "Budget exhausted! You have reached 100% of your allowance.")
-            elif status == AllowanceStatus.HIGH_USAGE:
-                messages.warning(self.request, "Warning! You have used 80% of your allowance.")
-                
         return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -197,3 +189,13 @@ class DashboardView(LoginRequiredMixin,TemplateView):
             
         messages.success(request,'Expense logged successfully.')
         return redirect('dashboard')
+
+class NotificationListView(LoginRequiredMixin, ListView):
+    model = Notification
+    template_name = 'budget/notifications.html'
+    context_object_name = 'notifications'
+
+    def get_queryset(self):
+        qs = Notification.objects.filter(user=self.request.user)
+        qs.filter(is_read=False).update(is_read=True)
+        return qs

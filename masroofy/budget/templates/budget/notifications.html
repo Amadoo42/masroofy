@@ -1,0 +1,49 @@
+{% extends 'budget/base.html' %}
+
+{% block title %}Alerts{% endblock %}
+
+{% block content %}
+<style>
+    .alert-card {
+        padding: 1.5rem;
+        background-color: var(--surface-color);
+        border: 1px solid;
+    }
+    .alert-card-critical {
+        border-color: var(--accent-blood);
+    }
+    .alert-card-warning {
+        border-color: #ff9900;
+    }
+    .alert-time {
+        margin: 0 0 0.5rem 0;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+    .alert-msg {
+        margin: 0;
+        color: var(--text-main);
+        font-weight: bold;
+    }
+</style>
+
+<div class="header-section" style="border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 2rem;">
+    <h2 class="title" style="margin: 0;">System Alerts</h2>
+</div>
+
+{% if notifications %}
+    <div style="display: flex; flex-direction: column; gap: 1rem;">
+        {% for alert in notifications %}
+            <div class="alert-card {% if 'Critical' in alert.message %}alert-card-critical{% else %}alert-card-warning{% endif %}">
+                <p class="alert-time">{{ alert.created_at|date:"M d, Y - H:i" }}</p>
+                <p class="alert-msg">{{ alert.message }}</p>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty-state" style="text-align: center; padding: 4rem; border: 1px solid var(--border-color);">
+        <h2>No Alerts</h2>
+        <p style="color: var(--text-muted);">Your budget is safe and healthy.</p>
+    </div>
+{% endif %}
+{% endblock %}

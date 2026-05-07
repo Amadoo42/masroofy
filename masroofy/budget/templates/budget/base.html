@@ -136,6 +136,12 @@
         <div class="nav-links">
             <a href="{% url 'dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">Dashboard</a>
             <a href="{% url 'history' %}" class="nav-item {% if request.resolver_match.url_name == 'history' %}active{% endif %}">History</a>
+            <a href="{% url 'notifications' %}" class="nav-item {% if request.resolver_match.url_name == 'notifications' %}active{% endif %}">
+                Alerts 
+                {% if unread_count > 0 %}
+                    <span style="background-color: var(--accent-blood); color: white; border-radius: 50%; padding: 0.1rem 0.4rem; font-size: 0.7rem; margin-left: 0.2rem;">{{ unread_count }}</span>
+                {% endif %}
+            </a>
         </div>
         {% endif %}
         
