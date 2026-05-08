@@ -1,31 +1,54 @@
 {% extends 'budget/base.html' %}
-{% block title %}Ledger{% endblock %}
+{% block title %}Full History{% endblock %}
 
 {% block content %}
-<div class="card" style="padding: 0;">
-    <table style="width: 100%; border-collapse: collapse; text-align: left;">
-        <thead>
-            <tr style="border-bottom: 1px solid var(--border-subtle);">
-                <th style="padding: 1rem; font-size: 0.8rem; color: var(--text-muted);">Date</th>
-                <th style="padding: 1rem; font-size: 0.8rem; color: var(--text-muted);">Category</th>
-                <th style="padding: 1rem; font-size: 0.8rem; color: var(--text-muted);">Note</th>
-                <th style="padding: 1rem; font-size: 0.8rem; color: var(--text-muted);">Amount</th>
-                <th style="padding: 1rem;"></th>
-            </tr>
-        </thead>
-        <tbody id="ledger-body">
-            {% for tx in transactions %}
-            <tr id="tx-row-{{ tx.id }}" style="border-bottom: 1px solid var(--border-subtle);">
-                <td style="padding: 1rem; font-family: var(--font-mono); font-size: 0.85rem;">{{ tx.timestamp|date:"M d, H:i" }}</td>
-                <td style="padding: 1rem; font-size: 0.85rem;">{{ tx.get_category_display }}</td>
-                <td style="padding: 1rem; font-size: 0.85rem; color: var(--text-muted);">{{ tx.note|default:"-" }}</td>
-                <td style="padding: 1rem; font-family: var(--font-mono); color: var(--accent-danger);">-{{ tx.amount }}</td>
-                <td style="padding: 1rem; text-align: right;">
-                    <button class="btn btn-danger" hx-post="{% url 'transaction_delete' tx.id %}" hx-target="#tx-row-{{ tx.id }}" hx-swap="outerHTML">X</button>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="bg-[#0A0A0A] rigid-border flex flex-col">
+    <div class="p-4 border-b border-[#222] bg-[#121212]">
+        <h2 class="font-heading text-lg font-medium text-on-surface">Full History</h2>
+    </div>
+    
+    <div class="flex flex-wrap gap-4 mb-6 items-end mt-6 ml-6 p-2">
+        <form method="GET" class="flex flex-wrap gap-4">
+            <div class="flex flex-col gap-1">
+                <label class="font-label text-label text-on-surface-variant uppercase">Category</label>
+                <select name="category" class="bg-black border border-[#333] p-2 font-data-sm text-on-surface focus:border-primary outline-none">
+                    <option value="">All Categories</option>
+                    {% for code, label in categories %}
+                        <option value="{{ code }}" {% if current_category == code %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="font-label text-label text-on-surface-variant uppercase">Date</label>
+                <input type="date" name="date" value="{{ current_date }}" class="bg-black border border-[#333] p-2 font-data-sm text-on-surface focus:border-primary outline-none">
+            </div>
+            <button type="submit" class="btn-secondary border px-4 py-1 font-label text-label uppercase">Filter</button>
+            
+            {% if current_category or current_date %}
+                <a href="{% url 'history' %}" class="text-error font-label text-xs uppercase self-center ml-2">Clear</a>
+            {% endif %}
+        </form>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr>
+                    <th class="p-3 border-b border-[#222] border-r font-label text-label text-on-surface-variant uppercase bg-[#121212] w-48">Date & Time</th>
+                    <th class="p-3 border-b border-[#222] border-r font-label text-label text-on-surface-variant uppercase bg-[#121212] w-48">Category</th>
+                    <th class="p-3 border-b border-[#222] border-r font-label text-label text-on-surface-variant uppercase bg-[#121212]">Description</th>
+                    <th class="p-3 border-b border-[#222] border-r font-label text-label text-on-surface-variant uppercase bg-[#121212] w-48 text-right">Amount</th>
+                    <th class="p-3 border-b border-[#222] font-label text-label text-on-surface-variant uppercase bg-[#121212] w-24 text-center">Act</th>
+                </tr>
+            </thead>
+            <tbody id="history-body" class="font-data-sm text-on-surface">
+                {% for tx in transactions %}
+                    {% include 'budget/tx_row.html' %}
+                {% empty %}
+                <tr><td colspan="5" class="p-6 text-center text-on-surface-variant">History is empty.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endblock %}

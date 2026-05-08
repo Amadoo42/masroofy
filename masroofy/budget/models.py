@@ -40,3 +40,12 @@ class Transaction(models.Model):
     category = models.CharField(max_length=20, choices=Category.choices)
     timestamp = models.DateTimeField(auto_now_add=True)
     note = models.TextField(blank=True, null=True)
+
+class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    message = models.CharField(max_length=255)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']

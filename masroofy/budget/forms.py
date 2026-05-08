@@ -1,7 +1,7 @@
 from django import forms
 from django.utils import timezone
 from .models import BudgetCycle, User
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, PasswordChangeForm
 from django.core.validators import RegexValidator
 
 class BudgetCycleForm(forms.ModelForm):
@@ -96,3 +96,40 @@ class PinSignupForm(UserCreationForm):
     def clean_username(self):
         return self.cleaned_data.get('username') 
        
+class AccountUpdateForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['username', 'email']
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'bg-black border border-[#333] p-sm font-data-md text-on-surface focus:outline-none focus:border-[#007AFF] transition-colors w-full'}),
+            'email': forms.EmailInput(attrs={'class': 'bg-black border border-[#333] p-sm font-data-md text-on-surface focus:outline-none focus:border-[#007AFF] transition-colors w-full'}),
+        }
+
+class ActiveCycleUpdateForm(forms.ModelForm):
+    class Meta:
+        model = BudgetCycle
+        fields = ['total_allowance', 'start_date', 'end_date']
+        widgets = {
+            'total_allowance': forms.NumberInput(attrs={
+                'class': 'bg-black border border-[#333] p-2 font-data-md text-on-surface focus:outline-none focus:border-[#007AFF] transition-colors w-full',
+                'step': '0.01'
+            }),
+            'start_date': forms.DateInput(attrs={
+                'type': 'date', 
+                'class': 'bg-black border border-[#333] p-2 font-data-md text-on-surface focus:outline-none focus:border-[#007AFF] transition-colors w-full'
+            }),
+            'end_date': forms.DateInput(attrs={
+                'type': 'date', 
+                'class': 'bg-black border border-[#333] p-2 font-data-md text-on-surface focus:outline-none focus:border-[#007AFF] transition-colors w-full'
+            }),
+        }
+
+    def clean(self):
+        cleaned_data = super().clean() 
+        start = cleaned_data.get('start_date')
+        end = cleaned_data.get('end_date')
+        
+        if start and end and start >= end:
+            raise forms.ValidationError("The end date must be after the start date")
+
+        return cleaned_data

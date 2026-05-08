@@ -1,0 +1,19 @@
+{% load tz %}
+<tr id="tx-row-{{ tx.id }}" class="hover:bg-[#121212] transition-colors border-b border-[#222]">
+    <td class="p-3 border-r border-[#222] text-on-surface-variant">{{ tx.timestamp|timezone:"Africa/Cairo"|date:"M d, H:i" }}</td>
+    <td class="p-3 border-r border-[#222]">
+        <span class="bg-[#1A1A1A] px-2 py-1 flex items-center gap-2 border border-[#333] w-max">
+            <span class="w-1.5 h-1.5 bg-tertiary"></span> {{ tx.get_category_display }}
+        </span>
+    </td>
+    <td class="p-3 border-r border-[#222]">{{ tx.note|default:"-" }}</td>
+    <td class="p-3 border-r border-[#222] text-right text-error font-data-md">-EGP {{ tx.amount }}</td>
+    <td class="p-3 text-center whitespace-nowrap">
+        <button hx-get="{% url 'transaction_edit' tx.id %}" hx-target="#tx-row-{{ tx.id }}" hx-swap="outerHTML" class="text-on-surface-variant hover:text-primary transition-colors mr-2">
+            <span class="material-symbols-outlined" style="font-size: 18px;">edit</span>
+        </button>
+        <button hx-post="{% url 'transaction_delete' tx.id %}" hx-target="#tx-row-{{ tx.id }}" hx-swap="outerHTML" class="text-on-surface-variant hover:text-error transition-colors">
+            <span class="material-symbols-outlined" style="font-size: 18px;">delete</span>
+        </button>
+    </td>
+</tr>

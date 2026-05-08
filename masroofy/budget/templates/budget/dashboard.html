@@ -2,29 +2,138 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
-    <div class="card" id="balance-card">
-        <div style="font-size: 0.8rem; color: var(--text-muted);">Remaining Balance</div>
-        <div style="font-size: 2rem; font-family: var(--font-mono);">{{ remaining_balance }} EGP</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    
+    <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-px bg-[#222] rigid-border">
+        <div class="bg-[#0A0A0A] p-6 flex flex-col justify-center">
+            <div class="font-label text-label text-on-surface-variant uppercase mb-2">Remaining Balance</div>
+            <div class="font-data-lg text-2xl text-primary font-semibold">EGP {{ remaining_balance }}</div>
+            <div class="mt-4 flex gap-2">
+                <span class="bg-[#1A1A1A] text-on-surface font-data-sm px-2 py-1 flex items-center gap-2 border border-[#333]">
+                    <span class="w-2 h-2 bg-primary"></span> {{ use_percent|floatformat:1 }}% Utilized
+                </span>
+            </div>
+        </div>
+        
+        <div class="bg-[#0A0A0A] p-6 flex flex-col justify-center">
+            <div class="font-label text-label text-on-surface-variant uppercase mb-2">Safe Daily Limit</div>
+            <div class="font-data-lg text-2xl text-on-surface font-semibold">EGP {{ daily_limit|floatformat:2 }}</div>
+            <div class="mt-4 flex gap-2">
+                <span class="bg-[#1A1A1A] {% if remaining_today < 0 %}text-error{% else %}text-on-surface-variant{% endif %} font-data-sm px-2 py-1 flex items-center gap-2 border border-[#333]">
+                    <span class="w-2 h-2 {% if remaining_today < 0 %}bg-error{% else %}bg-[#333]{% endif %}"></span> 
+                    Today: {{ remaining_today|floatformat:2 }} EGP
+                </span>
+            </div>
+        </div>
     </div>
-    <div class="card" id="daily-card">
-        <div style="font-size: 0.8rem; color: var(--text-muted);">Safe Daily Limit</div>
-        <div style="font-size: 2rem; font-family: var(--font-mono);">{{ daily_limit|floatformat:2 }} EGP</div>
+
+    <div class="bg-[#0A0A0A] rigid-border p-6 flex flex-col justify-between">
+        <div>
+            <div class="flex justify-between items-end mb-2">
+                <div class="font-label text-label text-on-surface-variant uppercase">Cycle</div>
+                <div class="font-data-sm text-on-surface">Day {{ current_day }} / {{ total_days }}</div>
+            </div>
+            <div class="h-1 w-full progress-bg relative mt-1">
+                <div class="absolute top-0 left-0 h-full progress-fill" style="width: {% widthratio current_day total_days 100 %}%;"></div>
+            </div>
+        </div>
+        <div class="flex-1 flex items-center justify-center mt-6 relative h-32">
+            <canvas id="categoryChart"></canvas>
+        </div>
     </div>
 </div>
 
-<div class="card">
-    <h3 style="margin-top: 0; font-size: 1rem;">Log Expense</h3>
-    <form hx-post="{% url 'dashboard' %}" hx-swap="none" style="display: flex; gap: 1rem; align-items: center;" id="log-form">
-        <input type="number" name="amount" id="quick-amount" class="input-dark" placeholder="0.00" min="0.01" step="0.01" required autofocus style="width: 120px;">
-        <select name="category" class="input-dark">
-            {% for code, label in categories %}
-                <option value="{{ code }}">{{ label }}</option>
-            {% endfor %}
-        </select>
-        <input type="text" name="note" class="input-dark" placeholder="Note (optional)" style="flex-grow: 1;">
-        <button type="submit" class="btn">Commit</button>
-    </form>
-    <div id="toast-container" style="margin-top: 1rem; font-size: 0.85rem; color: var(--accent-primary);"></div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-1 bg-[#0A0A0A] rigid-border p-6">
+        <div class="font-heading text-lg font-medium text-on-surface mb-4">Quick Entry</div>
+        <form hx-post="{% url 'dashboard' %}" class="flex flex-col gap-4">
+            <div class="flex flex-col gap-1">
+                <label class="font-label text-label text-on-surface-variant uppercase">Amount (EGP)</label>
+                <input type="number" name="amount" id="quick-amount" step="0.01" min="0.01" required class="bg-black border border-[#333] p-2 font-data-md text-on-surface focus:outline-none focus:border-primary transition-colors w-full" placeholder="0.00">
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="font-label text-label text-on-surface-variant uppercase">Category</label>
+                <select name="category" class="bg-black border border-[#333] p-2 font-data-md text-on-surface focus:outline-none focus:border-primary transition-colors w-full appearance-none">
+                    {% for code, label in categories %}
+                        <option value="{{ code }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="font-label text-label text-on-surface-variant uppercase">Note (Optional)</label>
+                <input type="text" name="note" class="bg-black border border-[#333] p-2 font-data-md text-on-surface focus:outline-none focus:border-primary transition-colors w-full" placeholder="e.g., Uber to work">
+            </div>
+            <button type="submit" class="btn-primary text-white font-label text-label uppercase py-2 px-4 mt-2 flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined" style="font-size: 16px;">add</span> Log Transaction
+            </button>
+        </form>
+    </div> <div class="lg:col-span-2 bg-[#0A0A0A] rigid-border flex flex-col">
+        <div class="p-4 border-b border-[#222] flex justify-between items-center bg-[#121212]">
+            <h2 class="font-heading text-lg font-medium text-on-surface">Recent History</h2>
+            <a href="{% url 'history' %}" class="text-on-surface-variant hover:text-primary font-label text-label uppercase flex items-center gap-1 transition-colors">
+                View All <span class="material-symbols-outlined" style="font-size: 14px;">arrow_forward</span>
+            </a>
+        </div>
+        <div class="flex-1 overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr>
+                        <th class="p-3 border-b border-[#222] border-r font-label text-label text-on-surface-variant uppercase bg-[#121212] w-24">Date</th>
+                        <th class="p-3 border-b border-[#222] border-r font-label text-label text-on-surface-variant uppercase bg-[#121212]">Description</th>
+                        <th class="p-3 border-b border-[#222] border-r font-label text-label text-on-surface-variant uppercase bg-[#121212] w-32">Category</th>
+                        <th class="p-3 border-b border-[#222] font-label text-label text-on-surface-variant uppercase bg-[#121212] w-36 text-right">Amount</th>
+                    </tr>
+                </thead>
+                <tbody class="font-data-sm text-on-surface">
+                    {% for tx in recent_txs %}
+                    <tr class="hover:bg-[#121212] transition-colors border-b border-[#222]">
+                        <td class="p-3 border-r border-[#222] text-on-surface-variant">{{ tx.timestamp|date:"d/m" }}</td>
+                        <td class="p-3 border-r border-[#222]">{{ tx.note|default:"-" }}</td>
+                        <td class="p-3 border-r border-[#222]">
+                            <span class="bg-[#1A1A1A] px-2 py-1 flex items-center gap-2 border border-[#333] w-max">
+                                <span class="w-1.5 h-1.5 bg-tertiary"></span> {{ tx.get_category_display }}
+                            </span>
+                        </td>
+                        <td class="p-3 text-right text-error font-data-md">-EGP {{ tx.amount }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="p-6 text-center text-on-surface-variant">No transactions yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
+
+<script>
+    const chartData = JSON.parse('{{ chart_data_json|escapejs }}');
+    const ctx = document.getElementById('categoryChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(chartData),
+            datasets: [{
+                data: Object.values(chartData),
+                backgroundColor: ['#007AFF', '#c8c6c5', '#454747', '#ffb4ab', '#353534'],
+                borderWidth: 1, borderColor: '#0A0A0A'
+            }]
+        },
+        options: {
+            responsive: true, 
+            maintainAspectRatio: false, 
+            cutout: '75%',
+            plugins: { 
+                legend: { 
+                    display: true,
+                    position: 'right',
+                    labels: {
+                        color: '#c1c6d7',
+                        padding: 15,
+                        font: { family: 'Inter', size: 11 }
+                    }
+                } 
+            }
+        }
+    });
+</script>
 {% endblock %}

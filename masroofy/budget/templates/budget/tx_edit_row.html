@@ -1,0 +1,27 @@
+{% load tz %}
+<tr id="tx-row-{{ tx.id }}" class="bg-[#121212] border-b border-primary">
+    <td class="p-3 border-r border-[#222] text-on-surface-variant">{{ tx.timestamp|timezone:"Africa/Cairo"|date:"M d, H:i" }}</td>
+    <td class="p-3 border-r border-[#222]">
+        <select name="category" form="edit-form-{{ tx.id }}" class="bg-black border border-[#333] p-1 text-on-surface w-full focus:border-primary outline-none font-data-sm">
+            {% for code, label in categories %}
+                <option value="{{ code }}" {% if tx.category == code %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </td>
+    <td class="p-3 border-r border-[#222]">
+        <input type="text" name="note" form="edit-form-{{ tx.id }}" value="{{ tx.note|default:'' }}" class="bg-black border border-[#333] p-1 text-on-surface w-full focus:border-primary outline-none font-data-sm">
+    </td>
+    <td class="p-3 border-r border-[#222]">
+        <input type="number" name="amount" step="0.01" min="0.01" form="edit-form-{{ tx.id }}" value="{{ tx.amount }}" class="bg-black border border-[#333] p-1 text-on-surface w-full text-right text-error font-data-md focus:border-primary outline-none">
+    </td>
+    <td class="p-3 text-center whitespace-nowrap flex gap-2 justify-center items-center h-full">
+        <form id="edit-form-{{ tx.id }}" hx-post="{% url 'transaction_edit' tx.id %}" hx-target="#tx-row-{{ tx.id }}" hx-swap="outerHTML" class="m-0">
+            <button type="submit" class="text-primary hover:text-white transition-colors flex items-center">
+                <span class="material-symbols-outlined" style="font-size: 18px;">save</span>
+            </button>
+        </form>
+        <button hx-get="{% url 'transaction_edit' tx.id %}?cancel=true" hx-target="#tx-row-{{ tx.id }}" hx-swap="outerHTML" class="text-on-surface-variant hover:text-error transition-colors flex items-center">
+            <span class="material-symbols-outlined" style="font-size: 18px;">cancel</span>
+        </button>
+    </td>
+</tr>

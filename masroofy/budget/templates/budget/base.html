@@ -1,125 +1,127 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Masroofy | {% block title %}{% endblock %}</title>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Masroofy | {% block title %}App{% endblock %}</title>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#007AFF",
+                        "error": "#ffb4ab",
+                        "on-surface": "#e5e2e1",
+                        "on-surface-variant": "#c1c6d7",
+                        "surface-container-highest": "#353534",
+                        "tertiary": "#c8c6c5",
+                    },
+                    fontFamily: {
+                        "heading": ["Inter"], "body": ["Inter"], "label": ["Inter"],
+                        "data-md": ["JetBrains Mono"], "data-sm": ["JetBrains Mono"], "data-lg": ["JetBrains Mono"]
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        :root {
-            --bg-base: #1e1e1e;
-            --bg-surface: #252525;
-            --bg-elevated: #2d2d2d;
-            --text-primary: #e0e0e0;
-            --text-muted: #8b8b8b;
-            --border-subtle: #3a3a3a;
-            --accent-primary: #4a9eff;
-            --accent-danger: #f85149;
-            --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
-            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-            --radius-sm: 4px;
-        }
-
-        body {
-            background-color: var(--bg-base);
-            color: var(--text-primary);
-            font-family: var(--font-sans);
-            margin: 0;
-            padding: 0;
-            line-height: 1.6;
-        }
-
-        .container { max-width: 900px; margin: 0 auto; padding: 2rem; }
-        
-        nav {
-            background-color: var(--bg-surface);
-            border-bottom: 1px solid var(--border-subtle);
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        nav h1 { margin: 0; font-size: 1.2rem; font-weight: 600; }
-        .nav-links a {
-            color: var(--text-muted);
-            text-decoration: none;
-            margin-left: 1.5rem;
-            font-size: 0.9rem;
-            transition: color 0.2s;
-        }
-        .nav-links a:hover, .nav-links a.active { color: var(--text-primary); }
-
-        .btn {
-            background-color: var(--bg-elevated);
-            color: var(--text-primary);
-            border: 1px solid var(--border-subtle);
-            padding: 0.4rem 1rem;
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            font-family: var(--font-sans);
-            font-size: 0.85rem;
-            transition: border-color 0.2s;
-            text-decoration: none;
-        }
-        .btn:hover { border-color: var(--text-primary); }
-        .btn-danger { color: var(--accent-danger); border-color: rgba(248, 81, 73, 0.4); }
-        .btn-danger:hover { background-color: rgba(248, 81, 73, 0.1); border-color: var(--accent-danger); }
-
-        .input-dark {
-            background-color: var(--bg-base);
-            border: 1px solid var(--border-subtle);
-            color: var(--text-primary);
-            padding: 0.5rem;
-            border-radius: var(--radius-sm);
-            font-family: var(--font-mono);
-            font-size: 0.9rem;
-            outline: none;
-        }
-        .input-dark:focus { border-color: var(--accent-primary); }
-
-        .card {
-            background-color: var(--bg-surface);
-            border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-sm);
-            padding: 1.5rem;
-        }
-
-        /* Cmd+K Utility */
-        .shortcut-hint {
-            font-family: var(--font-mono);
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            border: 1px solid var(--border-subtle);
-            padding: 2px 6px;
-            border-radius: 3px;
-            margin-left: 10px;
-        }
+        body { background-color: #000000; }
+        .rigid-border { border-color: #222; border-width: 1px; }
+        .input-focus:focus-within { border-color: #007AFF; }
+        .btn-primary { background-color: #007AFF; transition: background-color 150ms step-end; }
+        .btn-primary:hover { background-color: #005bc1; }
+        .btn-secondary { border-color: #333; transition: all 100ms step-end; }
+        .btn-secondary:hover { border-color: #ffffff; color: #ffffff; }
+        .progress-fill { background-color: #007AFF; }
+        .progress-bg { background-color: #222; }
     </style>
 </head>
-<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
-    <nav>
-        <h1>Masroofy</h1>
-        {% if user.is_authenticated %}
-        <div class="nav-links">
-            <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">Dashboard</a>
-            <a href="{% url 'history' %}" class="{% if request.resolver_match.url_name == 'history' %}active{% endif %}">Ledger</a>
-            <a href="{% url 'settings' %}" class="{% if request.resolver_match.url_name == 'settings' %}active{% endif %}">Settings</a>
-            <span class="shortcut-hint">Cmd+K to Log</span>
+<body class="bg-black text-on-surface font-body h-screen flex overflow-hidden" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+    
+    {% if user.is_authenticated %}
+    <nav class="hidden md:flex flex-col h-full border-r border-[#222] bg-[#0A0A0A] w-16 hover:w-64 transition-[width] duration-300 ease-in-out group overflow-hidden shrink-0 relative z-20">
+        <div class="w-64 flex flex-col h-full"> <div class="px-3 flex flex-col gap-1 pt-4 flex-1">
+                <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}bg-[#121212] border-primary text-on-surface{% else %}text-on-surface-variant border-transparent hover:border-[#333] hover:bg-[#1a1a1a]{% endif %} border-l-4 px-3 py-2 flex items-center gap-4 transition-colors duration-100">
+                    <span class="material-symbols-outlined">dashboard</span>
+                    <span class="font-label text-label uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">Dashboard</span>
+                </a>
+            <a href="{% url 'history' %}" class="{% if request.resolver_match.url_name == 'history' %}bg-[#121212] border-primary text-on-surface{% else %}text-on-surface-variant border-transparent hover:border-[#333] hover:bg-[#1a1a1a]{% endif %} border-l-4 px-3 py-2 flex items-center gap-4 transition-colors duration-100">
+                <span class="material-symbols-outlined">list_alt</span>
+                <span class="font-label text-label uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">History</span>
+            </a>
+                <a href="{% url 'settings' %}" class="{% if request.resolver_match.url_name == 'settings' %}bg-[#121212] border-primary text-on-surface{% else %}text-on-surface-variant border-transparent hover:border-[#333] hover:bg-[#1a1a1a]{% endif %} border-l-4 px-3 py-2 flex items-center gap-4 transition-colors duration-100">
+                    <span class="material-symbols-outlined">settings</span>
+                    <span class="font-label text-label uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">Settings</span>
+                </a>
+            </div>
+            
+            <div class="p-3 border-t border-[#222]">
+                <form action="{% url 'logout' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="w-full text-on-surface-variant border-transparent hover:border-error hover:text-error hover:bg-[#1a1a1a] border-l-4 px-3 py-2 flex items-center gap-4 transition-colors duration-100 text-left">
+                        <span class="material-symbols-outlined">logout</span>
+                        <span class="font-label text-label uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">Logout</span>
+                    </button>
+                </form>
+            </div>
         </div>
-        {% endif %}
     </nav>
-    <div class="container">
-        {% block content %}{% endblock %}
-    </div>
+    {% endif %}
+
+    <main class="flex-1 flex flex-col h-full overflow-hidden">
+        <header class="flex justify-between items-center w-full px-6 h-16 bg-[#0e0e0e] border-b border-[#222] shrink-0">
+            <div class="font-heading text-2xl font-bold tracking-tighter text-on-surface">MASROOFY</div>
+            
+            {% if user.is_authenticated %}
+            <div class="flex items-center gap-4 relative">
+                <button class="text-on-surface-variant hover:text-primary transition-colors relative" onclick="document.getElementById('notif-menu').classList.toggle('hidden')">
+                    <span class="material-symbols-outlined">notifications</span>
+                    {% if unread_notifications %}
+                    <span class="absolute top-0 right-0 w-2 h-2 bg-primary rounded-full"></span>
+                    {% endif %}
+                </button>
+                
+                <div id="notif-menu" class="hidden absolute top-12 right-0 w-64 bg-[#0A0A0A] rigid-border z-50 shadow-2xl">
+                    <div class="p-2 border-b border-[#222] font-label text-label uppercase text-on-surface-variant">Notifications</div>
+                    {% for notif in unread_notifications %}
+                    <div id="notif-{{ notif.id }}" class="p-3 border-b border-[#222] text-sm flex justify-between items-start">
+                        <span class="font-body text-on-surface">{{ notif.message }}</span>
+                        <button hx-post="{% url 'notification_read' notif.id %}" hx-target="#notif-{{ notif.id }}" hx-swap="delete" class="text-on-surface-variant hover:text-primary">
+                            <span class="material-symbols-outlined" style="font-size: 16px;">close</span>
+                        </button>
+                    </div>
+                    {% empty %}
+                    <div class="p-4 text-sm text-on-surface-variant text-center">No new alerts.</div>
+                    {% endfor %}
+                </div>
+                </div>
+            {% endif %}
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-6 flex flex-col gap-6" style="background-image: radial-gradient(#111 1px, transparent 1px); background-size: 24px 24px;">
+            {% if messages %}
+                {% for message in messages %}
+                <div class="bg-[#121212] border border-primary p-3 font-data-sm text-primary mb-4">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+            
+            {% block content %}{% endblock %}
+        </div>
+    </main>
 
     <script>
-        // Global listener for Cmd+K / Ctrl+K
         document.addEventListener('keydown', (e) => {
             if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
                 e.preventDefault();
-                const amountInput = document.getElementById('quick-amount');
-                if (amountInput) amountInput.focus();
+                const amt = document.getElementById('quick-amount');
+                if (amt) amt.focus();
             }
         });
     </script>
