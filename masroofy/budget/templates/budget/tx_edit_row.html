@@ -16,6 +16,7 @@
     </td>
     <td class="p-3 text-center whitespace-nowrap flex gap-2 justify-center items-center h-full">
         <form id="edit-form-{{ tx.id }}" hx-post="{% url 'transaction_edit' tx.id %}" hx-target="#tx-row-{{ tx.id }}" hx-swap="outerHTML" class="m-0">
+            {% csrf_token %}
             <button type="submit" class="text-primary hover:text-white transition-colors flex items-center">
                 <span class="material-symbols-outlined" style="font-size: 18px;">save</span>
             </button>

@@ -10,9 +10,9 @@ class BudgetCycleService:
     @staticmethod
     def get_cycle_metrics(cycle: BudgetCycle) -> dict:
         today = timezone.localdate()
-        total_days = max(1, (cycle.end_date - cycle.start_date).days)
+        total_days = max(1, (cycle.end_date - cycle.start_date).days + 1)
         current_day = max(1, (today - cycle.start_date).days + 1)
-        days_remaining = max(0, (cycle.end_date - today).days)
+        days_remaining = max(0, (cycle.end_date - today).days + 1)
 
         spent_today = (
             cycle.spent_today if cycle.last_update_date == today else Decimal("0.00")
@@ -51,11 +51,13 @@ class BudgetCycleService:
     def create_cycle(
         user: User, allowance: Decimal, start_date, end_date
     ) -> BudgetCycle:
+        if allowance <= 0:
+            raise ValidationError("Allowance must be a positive amount.")
+        
         if end_date <= start_date:
-            raise ValidationError("End date must be strictly after start date.")
-
-        BudgetCycle.objects.filter(user=user, is_active=True).update(is_active=False)
-        return BudgetCycle.objects.create(
+            raise ValidationError("End date must be strictly after start date.")\
+        
+        cycle = BudgetCycle(
             user=user,
             total_allowance=allowance,
             remaining_cycle_balance=allowance,
@@ -64,6 +66,14 @@ class BudgetCycleService:
             end_date=end_date,
             is_active=True,
         )
+        
+        cycle.full_clean()
+        
+        BudgetCycle.objects.filter(user=user, is_active=True).update(is_active=False)
+        
+        cycle.save()
+        
+        return cycle
 
 
 class TransactionMutationCommand:
@@ -113,9 +123,14 @@ class TransactionMutationCommand:
         if amount <= 0:
             raise ValidationError("Amount must be strictly positive.")
 
-        tx = Transaction.objects.create(
+        tx = Transaction(
             cycle=cycle, amount=amount, category=category, note=note
         )
+        
+        tx.full_clean()
+        
+        tx.save()
+        
         cls._mutate_balance(cycle, amount, tx.timestamp.date())
         return tx
 
@@ -149,7 +164,10 @@ class TransactionMutationCommand:
         tx.amount = amount
         tx.category = category
         tx.note = note
+        
+        tx.full_clean()
         tx.save()
+        
         cls._mutate_balance(tx.cycle, amount, tx.timestamp.date())
         return tx
 
