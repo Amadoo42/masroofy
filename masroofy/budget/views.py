@@ -28,11 +28,16 @@ class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = "budget/dashboard.html"
 
     def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return super().dispatch(request, *args, **kwargs)
+
         self.active_cycle = BudgetCycle.objects.filter(
             user=request.user, is_active=True
         ).first()
+
         if not self.active_cycle:
             return redirect("setup")
+
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -230,11 +235,16 @@ class HistoryView(LoginRequiredMixin, ListView):
     context_object_name = "transactions"
 
     def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return super().dispatch(request, *args, **kwargs)
+
         self.active_cycle = BudgetCycle.objects.filter(
             user=request.user, is_active=True
         ).first()
+
         if not self.active_cycle:
             return redirect("setup")
+
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
