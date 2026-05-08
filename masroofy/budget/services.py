@@ -111,6 +111,13 @@ class TransactionMutationCommand:
         cls._mutate_balance(tx.cycle, amount, tx.timestamp.date())
         return tx
 
+    @classmethod
+    @transaction.atomic
+    def duplicate(cls, user: User, transaction_id: int) -> Transaction:
+        tx = Transaction.objects.get(id=transaction_id, cycle__user=user)
+        new_note = f"{tx.note} (Copy)" if tx.note else "(Copy)"
+        return cls.log(user, tx.amount, tx.category, new_note)
+
 class AccountService:
     @staticmethod
     def export_data(user: User) -> str:

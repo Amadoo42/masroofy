@@ -166,6 +166,13 @@ class TransactionEditView(LoginRequiredMixin, View):
         except (ValueError, TypeError, InvalidOperation, ValidationError) as e:
             return HttpResponse(str(e), status=400)
 
+class TransactionDuplicateView(LoginRequiredMixin, View):
+    def post(self, request, pk, *args, **kwargs):
+        TransactionMutationCommand.duplicate(request.user, pk)
+        if request.htmx:
+            return HttpResponse(status=204, headers={'HX-Refresh': 'true'})
+        return redirect('history')
+
 class HistoryView(LoginRequiredMixin, ListView):
     model = Transaction
     template_name = 'budget/history.html'

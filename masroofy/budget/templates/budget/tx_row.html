@@ -12,6 +12,11 @@
         <button hx-get="{% url 'transaction_edit' tx.id %}" hx-target="#tx-row-{{ tx.id }}" hx-swap="outerHTML" class="text-on-surface-variant hover:text-primary transition-colors mr-2">
             <span class="material-symbols-outlined" style="font-size: 18px;">edit</span>
         </button>
+        
+        <button hx-post="{% url 'transaction_duplicate' tx.id %}" class="text-on-surface-variant hover:text-primary transition-colors mr-2" title="Duplicate">
+            <span class="material-symbols-outlined" style="font-size: 18px;">content_copy</span>
+        </button>
+
         <button hx-post="{% url 'transaction_delete' tx.id %}" hx-target="#tx-row-{{ tx.id }}" hx-swap="outerHTML" class="text-on-surface-variant hover:text-error transition-colors">
             <span class="material-symbols-outlined" style="font-size: 18px;">delete</span>
         </button>
