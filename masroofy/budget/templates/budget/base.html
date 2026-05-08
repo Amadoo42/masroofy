@@ -76,12 +76,12 @@
     {% endif %}
 
     <main class="flex-1 flex flex-col h-full overflow-hidden">
-        <header class="flex justify-between items-center w-full px-6 h-16 bg-[#0e0e0e] border-b border-[#222] shrink-0">
-            <div class="font-heading text-2xl font-bold tracking-tighter text-on-surface">MASROOFY</div>
+        <header class="flex justify-between items-center w-full px-6 h-16 bg-[#123698] border-b border-[#222] shrink-0">
+            <div class="font-heading text-2xl font-bold tracking-tighter text-white">MASROOFY</div>
             
             {% if user.is_authenticated %}
             <div class="flex items-center gap-4 relative">
-                <button class="text-on-surface-variant hover:text-primary transition-colors relative" onclick="document.getElementById('notif-menu').classList.toggle('hidden')">
+                <button class="text-white hover:text-[#83C8F2] transition-colors relative" onclick="document.getElementById('notif-menu').classList.toggle('hidden')">
                     <span class="material-symbols-outlined">notifications</span>
                     {% if unread_notifications %}
                     <span class="absolute top-0 right-0 w-2 h-2 bg-primary rounded-full"></span>
