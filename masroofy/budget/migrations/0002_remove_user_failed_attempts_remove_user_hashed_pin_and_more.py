@@ -4,32 +4,31 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('budget', '0001_initial'),
+        ("budget", "0001_initial"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='user',
-            name='failed_attempts',
+            model_name="user",
+            name="failed_attempts",
         ),
         migrations.RemoveField(
-            model_name='user',
-            name='hashed_pin',
+            model_name="user",
+            name="hashed_pin",
         ),
         migrations.RemoveField(
-            model_name='user',
-            name='is_privacy_lock_enabled',
+            model_name="user",
+            name="is_privacy_lock_enabled",
         ),
         migrations.AlterField(
-            model_name='user',
-            name='email',
+            model_name="user",
+            name="email",
             field=models.EmailField(max_length=254, unique=True),
         ),
         migrations.AlterField(
-            model_name='user',
-            name='username',
+            model_name="user",
+            name="username",
             field=models.CharField(blank=True, max_length=150, null=True, unique=True),
         ),
     ]

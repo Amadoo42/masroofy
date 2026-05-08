@@ -1,133 +1,54 @@
 {% extends 'budget/base.html' %}
-
-{% block title %}Transaction History{% endblock %}
+{% block title %}Full History{% endblock %}
 
 {% block content %}
-<style>
-    .header-section {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-end;
-        margin-bottom: 2rem;
-        border-bottom: 1px solid var(--border-color);
-        padding-bottom: 1rem;
-    }
-
-    .title {
-        font-size: 2rem;
-        margin: 0;
-        letter-spacing: 1px;
-    }
-
-    .filter-form {
-        display: flex;
-        gap: 1rem;
-    }
-
-    .input-dark {
-        background-color: var(--surface-color);
-        border: 1px solid var(--border-color);
-        color: var(--text-main);
-        padding: 0.5rem;
-        font-family: inherit;
-        outline: none;
-    }
-
-    .input-dark:focus {
-        border-color: var(--accent-blood);
-    }
-
-    .table-container {
-        width: 100%;
-        border: 1px solid var(--border-color);
-    }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        text-align: left;
-    }
-
-    th, td {
-        padding: 1rem;
-        border-bottom: 1px solid var(--border-color);
-    }
-
-    th {
-        background-color: var(--surface-color);
-        color: var(--text-muted);
-        font-size: 0.85rem;
-        letter-spacing: 1px;
-    }
-
-    tr:hover {
-        background-color: #1a1a1a;
-    }
-
-    .amount {
-        color: var(--accent-blood);
-        font-weight: bold;
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 4rem 2rem;
-        color: var(--text-muted);
-        border: 1px solid var(--border-color);
-        background-color: var(--surface-color);
-    }
-
-    .empty-state h2 {
-        color: var(--text-main);
-        margin-bottom: 0.5rem;
-    }
-</style>
-
-<div class="header-section">
-    <h2 class="title">Transaction History</h2>
+<div class="bg-[#0A0A0A] rigid-border flex flex-col">
+    <div class="p-4 border-b border-[#222] bg-[#121212]">
+        <h2 class="font-heading text-lg font-medium text-on-surface">Full History</h2>
+    </div>
     
-    <form class="filter-form" method="GET" action="">
-        <input type="date" name="date" class="input-dark" value="{{ current_date }}">
-        
-        <select name="category" class="input-dark">
-            <option value="">All Categories</option>
-            {% for code, label in categories %}
-                <option value="{{ code }}" {% if current_category == code %}selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-        </select>
-        
-        <button type="submit" class="btn btn-primary">Filter</button>
-    </form>
-</div>
-
-{% if transactions %}
-    <div class="table-container">
-        <table>
+    <div class="flex flex-wrap gap-4 mb-6 items-end mt-6 ml-6 p-2">
+        <form method="GET" class="flex flex-wrap gap-4">
+            <div class="flex flex-col gap-1">
+                <label class="font-label text-label text-on-surface-variant uppercase">Category</label>
+                <select name="category" class="bg-black border border-[#333] p-2 font-data-sm text-on-surface focus:border-primary outline-none">
+                    <option value="">All Categories</option>
+                    {% for code, label in categories %}
+                        <option value="{{ code }}" {% if current_category == code %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="font-label text-label text-on-surface-variant uppercase">Date</label>
+                <input type="date" name="date" value="{{ current_date }}" class="bg-black border border-[#333] p-2 font-data-sm text-on-surface focus:border-primary outline-none">
+            </div>
+            <button type="submit" class="btn-secondary border px-4 py-1 font-label text-label uppercase">Filter</button>
+            
+            {% if current_category or current_date %}
+                <a href="{% url 'history' %}" class="text-error font-label text-xs uppercase self-center ml-2">Clear</a>
+            {% endif %}
+        </form>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
             <thead>
                 <tr>
-                    <th>Date / Time</th>
-                    <th>Category</th>
-                    <th>Note</th>
-                    <th>Amount</th>
+                    <th class="p-3 border-b border-[#222] border-r font-label text-label text-on-surface-variant uppercase bg-[#121212] w-48">Date & Time</th>
+                    <th class="p-3 border-b border-[#222] border-r font-label text-label text-on-surface-variant uppercase bg-[#121212] w-48">Category</th>
+                    <th class="p-3 border-b border-[#222] border-r font-label text-label text-on-surface-variant uppercase bg-[#121212]">Description</th>
+                    <th class="p-3 border-b border-[#222] border-r font-label text-label text-on-surface-variant uppercase bg-[#121212] w-48 text-right">Amount</th>
+                    <th class="p-3 border-b border-[#222] font-label text-label text-on-surface-variant uppercase bg-[#121212] w-24 text-center">Act</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="history-body" class="font-data-sm text-on-surface">
                 {% for tx in transactions %}
-                <tr>
-                    <td>{{ tx.timestamp|date:"Y-m-d H:i" }}</td>
-                    <td>{{ tx.get_category_display }}</td>
-                    <td>{{ tx.note|default:"-" }}</td>
-                    <td class="amount">-{{ tx.amount }} EGP</td>
-                </tr>
+                    {% include 'budget/tx_row.html' %}
+                {% empty %}
+                <tr><td colspan="5" class="p-6 text-center text-on-surface-variant">History is empty.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-{% else %}
-    <div class="empty-state">
-        <h2>No Transactions Found.</h2>
-        <p>Your history is clean. Log your first expense on the dashboard.</p>
-    </div>
-{% endif %}
-
+</div>
 {% endblock %}

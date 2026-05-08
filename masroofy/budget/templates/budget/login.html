@@ -1,109 +1,37 @@
 {% extends 'budget/base.html' %}
-
 {% block title %}Login{% endblock %}
 
 {% block content %}
-<style>
-    .login-container {
-        max-width: 400px;
-        margin: 4rem auto;
-        padding: 2rem;
-        background-color: var(--surface-color);
-        border: 1px solid var(--border-color);
-        text-align: center;
-    }
-
-    .login-container h2 {
-        margin-top: 0;
-        margin-bottom: 2rem;
-        letter-spacing: 3px;
-        color: var(--text-main);
-    }
-
-    .form-group {
-        margin-bottom: 1.5rem;
-        text-align: left;
-    }
-
-    .form-group label {
-        display: block;
-        font-size: 0.75rem;
-        margin-bottom: 0.5rem;
-        color: var(--text-muted);
-    }
-
-    .form-group input {
-        width: 100%;
-        padding: 0.8rem;
-        background-color: var(--bg-color);
-        border: 1px solid var(--border-color);
-        color: var(--text-main);
-        box-sizing: border-box;
-        font-family: inherit;
-        outline: none;
-        transition: border-color 0.2s;
-    }
-
-    .form-group input:focus {
-        border-color: var(--accent-blood);
-    }
-
-    .error-msg {
-        color: var(--accent-blood);
-        font-size: 0.8rem;
-        margin-bottom: 1rem;
-        border: 1px solid var(--accent-blood);
-        padding: 0.5rem;
-        background: rgba(255, 42, 42, 0.1);
-    }
-
-    .footer-text {
-        text-align: center;
-        margin-top: 1.5rem;
-        font-size: 0.8rem;
-        color: var(--text-muted);
-    }
-
-    .footer-text a {
-        color: var(--accent-blood);
-        text-decoration: none;
-    }
-
-    .footer-text a:hover {
-        text-decoration: underline;
-    }
-
-    .btn-block {
-        width: 100%;
-        margin-top: 1rem;
-    }
-</style>
-
-<div class="login-container">
-    <h2>Enter App</h2>
+<div class="max-w-md mx-auto mt-16 bg-[#0A0A0A] rigid-border p-8 shadow-2xl relative z-10 rounded-sm w-full">
+    <h2 class="font-heading text-2xl font-medium tracking-widest text-on-surface mb-8 text-center uppercase">Enter App</h2>
     
     {% if form.errors %}
-        <div class="error-msg">
+        <div class="bg-error/10 border border-error p-3 text-error font-data-sm mb-6 text-center">
             ACCESS DENIED. CHECK CREDENTIALS.
         </div>
     {% endif %}
 
-    <form method="post">
+    <form method="post" class="flex flex-col gap-6" id="login-form">
         {% csrf_token %}
-        <div class="form-group">
-            <label for="{{ form.username.id_for_label }}">{{ form.username.label }}</label>
-            {{ form.username }}
+        {% for field in form %}
+        <div class="flex flex-col gap-2">
+            <label for="{{ field.id_for_label }}" class="font-label text-label text-on-surface-variant uppercase">{{ field.label }}</label>
+            {{ field }}
         </div>
-        <div class="form-group">
-            <label for="{{ form.password.id_for_label }}">{{ form.password.label }}</label>
-            {{ form.password }}
-        </div>
-        
-        <button type="submit" class="btn btn-primary btn-block">Unlock</button>
+        {% endfor %}
+        <button type="submit" class="btn-primary text-white font-label text-lg uppercase py-3 px-6 mt-4 w-full shadow-lg hover:shadow-primary/20 transition-all">Unlock</button>
     </form>
 
-    <div class="footer-text">
-        Don't have an account? <a href="{% url 'signup' %}">Sign up here</a>.
+    <div class="text-center mt-6 font-data-sm text-on-surface-variant">
+        Don't have an account? <a href="{% url 'signup' %}" class="text-primary hover:underline">Sign up here</a>.
     </div>
 </div>
+
+<script>
+    document.querySelectorAll('#login-form input').forEach(el => {
+        if(el.type !== 'hidden') {
+            el.classList.add('bg-black', 'border', 'border-[#333]', 'p-3', 'font-data-md', 'text-on-surface', 'focus:outline-none', 'focus:border-primary', 'transition-colors', 'w-full');
+        }
+    });
+</script>
 {% endblock content %}
