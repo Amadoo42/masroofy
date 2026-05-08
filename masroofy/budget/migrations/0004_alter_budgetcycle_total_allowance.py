@@ -5,15 +5,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('budget', '0003_alter_user_username'),
+        ("budget", "0003_alter_user_username"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='budgetcycle',
-            name='total_allowance',
-            field=models.DecimalField(decimal_places=2, max_digits=10, validators=[django.core.validators.MinValueValidator(0.01)]),
+            model_name="budgetcycle",
+            name="total_allowance",
+            field=models.DecimalField(
+                decimal_places=2,
+                max_digits=10,
+                validators=[django.core.validators.MinValueValidator(0.01)],
+            ),
         ),
     ]

@@ -5,15 +5,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('budget', '0002_remove_user_failed_attempts_remove_user_hashed_pin_and_more'),
+        ("budget", "0002_remove_user_failed_attempts_remove_user_hashed_pin_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='user',
-            name='username',
+            model_name="user",
+            name="username",
             field=models.CharField(default=django.utils.timezone.now, max_length=150),
             preserve_default=False,
         ),
