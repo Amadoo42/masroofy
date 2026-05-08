@@ -1,133 +1,31 @@
 {% extends 'budget/base.html' %}
-
-{% block title %}Transaction History{% endblock %}
+{% block title %}Ledger{% endblock %}
 
 {% block content %}
-<style>
-    .header-section {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-end;
-        margin-bottom: 2rem;
-        border-bottom: 1px solid var(--border-color);
-        padding-bottom: 1rem;
-    }
-
-    .title {
-        font-size: 2rem;
-        margin: 0;
-        letter-spacing: 1px;
-    }
-
-    .filter-form {
-        display: flex;
-        gap: 1rem;
-    }
-
-    .input-dark {
-        background-color: var(--surface-color);
-        border: 1px solid var(--border-color);
-        color: var(--text-main);
-        padding: 0.5rem;
-        font-family: inherit;
-        outline: none;
-    }
-
-    .input-dark:focus {
-        border-color: var(--accent-blood);
-    }
-
-    .table-container {
-        width: 100%;
-        border: 1px solid var(--border-color);
-    }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        text-align: left;
-    }
-
-    th, td {
-        padding: 1rem;
-        border-bottom: 1px solid var(--border-color);
-    }
-
-    th {
-        background-color: var(--surface-color);
-        color: var(--text-muted);
-        font-size: 0.85rem;
-        letter-spacing: 1px;
-    }
-
-    tr:hover {
-        background-color: #1a1a1a;
-    }
-
-    .amount {
-        color: var(--accent-blood);
-        font-weight: bold;
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 4rem 2rem;
-        color: var(--text-muted);
-        border: 1px solid var(--border-color);
-        background-color: var(--surface-color);
-    }
-
-    .empty-state h2 {
-        color: var(--text-main);
-        margin-bottom: 0.5rem;
-    }
-</style>
-
-<div class="header-section">
-    <h2 class="title">Transaction History</h2>
-    
-    <form class="filter-form" method="GET" action="">
-        <input type="date" name="date" class="input-dark" value="{{ current_date }}">
-        
-        <select name="category" class="input-dark">
-            <option value="">All Categories</option>
-            {% for code, label in categories %}
-                <option value="{{ code }}" {% if current_category == code %}selected{% endif %}>{{ label }}</option>
+<div class="card" style="padding: 0;">
+    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead>
+            <tr style="border-bottom: 1px solid var(--border-subtle);">
+                <th style="padding: 1rem; font-size: 0.8rem; color: var(--text-muted);">Date</th>
+                <th style="padding: 1rem; font-size: 0.8rem; color: var(--text-muted);">Category</th>
+                <th style="padding: 1rem; font-size: 0.8rem; color: var(--text-muted);">Note</th>
+                <th style="padding: 1rem; font-size: 0.8rem; color: var(--text-muted);">Amount</th>
+                <th style="padding: 1rem;"></th>
+            </tr>
+        </thead>
+        <tbody id="ledger-body">
+            {% for tx in transactions %}
+            <tr id="tx-row-{{ tx.id }}" style="border-bottom: 1px solid var(--border-subtle);">
+                <td style="padding: 1rem; font-family: var(--font-mono); font-size: 0.85rem;">{{ tx.timestamp|date:"M d, H:i" }}</td>
+                <td style="padding: 1rem; font-size: 0.85rem;">{{ tx.get_category_display }}</td>
+                <td style="padding: 1rem; font-size: 0.85rem; color: var(--text-muted);">{{ tx.note|default:"-" }}</td>
+                <td style="padding: 1rem; font-family: var(--font-mono); color: var(--accent-danger);">-{{ tx.amount }}</td>
+                <td style="padding: 1rem; text-align: right;">
+                    <button class="btn btn-danger" hx-post="{% url 'transaction_delete' tx.id %}" hx-target="#tx-row-{{ tx.id }}" hx-swap="outerHTML">X</button>
+                </td>
+            </tr>
             {% endfor %}
-        </select>
-        
-        <button type="submit" class="btn btn-primary">Filter</button>
-    </form>
+        </tbody>
+    </table>
 </div>
-
-{% if transactions %}
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>Date / Time</th>
-                    <th>Category</th>
-                    <th>Note</th>
-                    <th>Amount</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for tx in transactions %}
-                <tr>
-                    <td>{{ tx.timestamp|date:"Y-m-d H:i" }}</td>
-                    <td>{{ tx.get_category_display }}</td>
-                    <td>{{ tx.note|default:"-" }}</td>
-                    <td class="amount">-{{ tx.amount }} EGP</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-{% else %}
-    <div class="empty-state">
-        <h2>No Transactions Found.</h2>
-        <p>Your history is clean. Log your first expense on the dashboard.</p>
-    </div>
-{% endif %}
-
 {% endblock %}

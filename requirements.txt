@@ -1,0 +1,8 @@
+asgiref==3.11.1
+coverage==7.13.5
+Django==6.0.5
+factory_boy==3.3.3
+Faker==40.15.0
+hypothesis==6.152.4
+sortedcontainers==2.4.0
+sqlparse==0.5.5

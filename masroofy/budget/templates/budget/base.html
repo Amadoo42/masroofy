@@ -4,157 +4,124 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Masroofy | {% block title %}{% endblock %}</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <style>
         :root {
-            --bg-color: #050505;
-            --surface-color: #121212;
-            --border-color: #333333;
-            --text-main: #f0f0f0;
-            --text-muted: #888888;
-            --accent-blood: #ff2a2a;
-            --accent-hover: #cc0000;
+            --bg-base: #1e1e1e;
+            --bg-surface: #252525;
+            --bg-elevated: #2d2d2d;
+            --text-primary: #e0e0e0;
+            --text-muted: #8b8b8b;
+            --border-subtle: #3a3a3a;
+            --accent-primary: #4a9eff;
+            --accent-danger: #f85149;
+            --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            --radius-sm: 4px;
         }
-        
+
         body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
             margin: 0;
             padding: 0;
-            text-transform: uppercase; 
+            line-height: 1.6;
         }
 
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-
+        .container { max-width: 900px; margin: 0 auto; padding: 2rem; }
+        
         nav {
-            border-bottom: 2px solid var(--accent-blood);
+            background-color: var(--bg-surface);
+            border-bottom: 1px solid var(--border-subtle);
             padding: 1rem 2rem;
-            background-color: var(--surface-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        nav h1 {
-            margin: 0;
-            font-size: 1.5rem;
-            letter-spacing: 2px;
-            color: var(--text-main);
-        }
-
-        nav h1 span {
-            color: var(--accent-blood);
-        }
-
-        .nav-auth {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 2rem;
-            align-items: center;
-        }
-
-        .nav-item {
+        nav h1 { margin: 0; font-size: 1.2rem; font-weight: 600; }
+        .nav-links a {
             color: var(--text-muted);
             text-decoration: none;
-            font-size: 0.85rem;
-            font-weight: bold;
-            letter-spacing: 1px;
-            transition: color 0.2s ease-in-out;
+            margin-left: 1.5rem;
+            font-size: 0.9rem;
+            transition: color 0.2s;
         }
-
-        .nav-item:hover {
-            color: var(--text-main);
-        }
-
-        .nav-item.active {
-            color: var(--accent-blood);
-            border-bottom: 2px solid var(--accent-blood);
-            padding-bottom: 0.2rem;
-        }
-
-        .username-display {
-            color: var(--text-muted);
-            font-size: 0.8rem;
-            letter-spacing: 1px;
-        }
+        .nav-links a:hover, .nav-links a.active { color: var(--text-primary); }
 
         .btn {
-            background-color: transparent;
-            color: var(--text-main);
-            border: 1px solid var(--border-color);
-            padding: 0.5rem 1.2rem;
+            background-color: var(--bg-elevated);
+            color: var(--text-primary);
+            border: 1px solid var(--border-subtle);
+            padding: 0.4rem 1rem;
+            border-radius: var(--radius-sm);
             cursor: pointer;
-            font-weight: bold;
-            font-family: inherit;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            transition: all 0.2s ease-in-out;
+            font-family: var(--font-sans);
+            font-size: 0.85rem;
+            transition: border-color 0.2s;
             text-decoration: none;
-            display: inline-block;
+        }
+        .btn:hover { border-color: var(--text-primary); }
+        .btn-danger { color: var(--accent-danger); border-color: rgba(248, 81, 73, 0.4); }
+        .btn-danger:hover { background-color: rgba(248, 81, 73, 0.1); border-color: var(--accent-danger); }
+
+        .input-dark {
+            background-color: var(--bg-base);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-primary);
+            padding: 0.5rem;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
             outline: none;
         }
+        .input-dark:focus { border-color: var(--accent-primary); }
 
-        .btn:hover {
-            border-color: var(--accent-blood);
-            color: var(--accent-blood);
+        .card {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            padding: 1.5rem;
         }
 
-        .btn-primary {
-            background-color: var(--accent-blood);
-            color: #fff;
-            border-color: var(--accent-blood);
-        }
-
-        .btn-primary:hover {
-            background-color: var(--accent-hover);
-            border-color: var(--accent-hover);
-            color: #fff;
-        }
-
-        .btn-link {
-            background: none;
-            border: 1px solid var(--border-color);
+        /* Cmd+K Utility */
+        .shortcut-hint {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            border: 1px solid var(--border-subtle);
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin-left: 10px;
         }
     </style>
 </head>
-<body>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
     <nav>
-        <a href="{% if user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'login' %}{% endif %}" style="text-decoration: none;">
-            <h1>Masroofy<span>.</span></h1>
-        </a>
-        
+        <h1>Masroofy</h1>
         {% if user.is_authenticated %}
         <div class="nav-links">
-            <a href="{% url 'dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">Dashboard</a>
-            <a href="{% url 'history' %}" class="nav-item {% if request.resolver_match.url_name == 'history' %}active{% endif %}">History</a>
+            <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">Dashboard</a>
+            <a href="{% url 'history' %}" class="{% if request.resolver_match.url_name == 'history' %}active{% endif %}">Ledger</a>
+            <a href="{% url 'settings' %}" class="{% if request.resolver_match.url_name == 'settings' %}active{% endif %}">Settings</a>
+            <span class="shortcut-hint">Cmd+K to Log</span>
         </div>
         {% endif %}
-        
-        <div class="nav-auth">
-            {% if user.is_authenticated %}
-                <span class="username-display">{{ user.username }}</span>
-                <form method="post" action="{% url 'logout' %}" style="margin: 0;">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-link">Log Out</button>
-                </form>
-            {% else %}
-                <a href="{% url 'login' %}" class="btn">Log In</a>
-                <a href="{% url 'signup' %}" class="btn btn-primary">Sign Up</a>
-            {% endif %}
-        </div>
     </nav>
-
     <div class="container">
         {% block content %}{% endblock %}
     </div>
+
+    <script>
+        // Global listener for Cmd+K / Ctrl+K
+        document.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                const amountInput = document.getElementById('quick-amount');
+                if (amountInput) amountInput.focus();
+            }
+        });
+    </script>
 </body>
 </html>

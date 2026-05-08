@@ -1,226 +1,30 @@
 {% extends 'budget/base.html' %}
-
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-
-<style>
-    .alert {
-        padding: 1rem 1.5rem;
-        margin-bottom: 1.5rem;
-        border: 1px solid var(--border-color);
-        font-weight: bold;
-        letter-spacing: 1px;
-    }
-    
-    .dashboard-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-    }
-    
-    .card {
-        background-color: var(--surface-color);
-        border: 1px solid var(--border-color);
-        padding: 1.5rem;
-    }
-
-    .card-label {
-        color: var(--text-muted);
-        font-size: 0.8rem;
-        letter-spacing: 1px;
-        margin-bottom: 0.5rem;
-    }
-
-    .card-value {
-        font-size: 2rem;
-        font-weight: bold;
-        color: var(--text-main);
-    }
-
-    .card-value span {
-        font-size: 1rem;
-        color: var(--text-muted);
-    }
-
-    .section-title {
-        font-size: 0.85rem;
-        color: var(--text-muted);
-        letter-spacing: 2px;
-        margin-bottom: 1rem;
-        border-bottom: 1px solid var(--border-color);
-        padding-bottom: 0.5rem;
-    }
-
-    .quick-add-form {
-        display: flex;
-        gap: 1rem;
-        margin-bottom: 2rem;
-        flex-wrap: wrap;
-    }
-
-    .input-dark {
-        background-color: var(--surface-color);
-        border: 1px solid var(--border-color);
-        color: var(--text-main);
-        padding: 0.75rem;
-        font-family: inherit;
-        outline: none;
-        flex: 1;
-    }
-
-    .input-dark:focus {
-        border-color: var(--accent-blood);
-    }
-
-    .messages {
-        margin-bottom: 1rem;
-    }
-
-    .chart-container {
-        background-color: var(--surface-color);
-        border: 1px solid var(--border-color);
-        padding: 2rem;
-        max-width: 400px;
-        margin: 0 auto;
-    }
-
-    .no-data {
-        text-align: center;
-        color: var(--text-muted);
-        padding: 3rem;
-        border: 1px solid var(--border-color);
-        background-color: var(--surface-color);
-    }
-
-    .message-success {
-        color: #4caf50;
-        border: 1px solid #4caf50;
-        padding: 0.5rem 1rem;
-        font-size: 0.85rem;
-        background-color: rgba(76, 175, 80, 0.05);
-    }
-
-    .alert-warning {
-        border-color: #ff9900;
-        color: #ff9900;
-        background-color: #1a1400;
-    }
-    
-    .alert-error, .message-error {
-        border-color: var(--accent-blood);
-        color: var(--accent-blood);
-        background-color: #1a0000;
-        padding: 0.5rem 1rem;
-        font-size: 0.85rem;
-    }
-
-    .final-day-banner {
-        background-color: rgba(255, 42, 42, 0.1);
-        border: 2px solid var(--accent-blood);
-        color: var(--accent-blood);
-        text-align: center;
-        padding: 1rem;
-        margin-bottom: 1.5rem;
-        text-transform: uppercase;
-        letter-spacing: 3px;
-        font-weight: 900;
-        font-size: 0.9rem;
-        animation: pulse-border 2s infinite;
-    }
-
-    @keyframes pulse-border {
-        0% { border-color: var(--accent-blood); box-shadow: 0 0 0 0 rgba(255, 42, 42, 0.4); }
-        70% { border-color: #ff6b6b; box-shadow: 0 0 0 10px rgba(255, 42, 42, 0); }
-        100% { border-color: var(--accent-blood); box-shadow: 0 0 0 0 rgba(255, 42, 42, 0); }
-    }
-</style>
-
-{%if is_final %}
-<div class="final-day-banner">
-    <span style="margin-right: 10px;">⚠</span> 
-    Today is the final day of your cycle 
-    <span style="margin-left: 10px;">⚠</span>
-</div>
-{% endif %}
-
-<!-- Remaining Balance & Safe Daily Limit card html-->
-{% if cycle %}
-<div class="dashboard-grid">
-    <div class="card">
-        <p class="card-label">Remaining Balance</p>
-        <p class="card-value">{{ remaining_balance }} <span>EGP</span></p>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+    <div class="card" id="balance-card">
+        <div style="font-size: 0.8rem; color: var(--text-muted);">Remaining Balance</div>
+        <div style="font-size: 2rem; font-family: var(--font-mono);">{{ remaining_balance }} EGP</div>
     </div>
-    <div class="card">
-        <p class="card-label">Safe Daily Limit</p>
-        <p class="card-value">{{ daily_limit|floatformat:2 }} <span>EGP</span></p>
+    <div class="card" id="daily-card">
+        <div style="font-size: 0.8rem; color: var(--text-muted);">Safe Daily Limit</div>
+        <div style="font-size: 2rem; font-family: var(--font-mono);">{{ daily_limit|floatformat:2 }} EGP</div>
     </div>
 </div>
-{% endif %}
 
-
-{% if messages %}
-<div class="messages" style="margin-bottom: 2rem;">
-    {% for message in messages %}
-        <div class="alert {% if message.tags == 'error' %}alert-error{% elif message.tags == 'warning' %}alert-warning{% elif message.tags == 'success' %}message-success{% else %}alert-info{% endif %}">
-            {{ message }}
-        </div>
-    {% endfor %}
+<div class="card">
+    <h3 style="margin-top: 0; font-size: 1rem;">Log Expense</h3>
+    <form hx-post="{% url 'dashboard' %}" hx-swap="none" style="display: flex; gap: 1rem; align-items: center;" id="log-form">
+        <input type="number" name="amount" id="quick-amount" class="input-dark" placeholder="0.00" min="0.01" step="0.01" required autofocus style="width: 120px;">
+        <select name="category" class="input-dark">
+            {% for code, label in categories %}
+                <option value="{{ code }}">{{ label }}</option>
+            {% endfor %}
+        </select>
+        <input type="text" name="note" class="input-dark" placeholder="Note (optional)" style="flex-grow: 1;">
+        <button type="submit" class="btn">Commit</button>
+    </form>
+    <div id="toast-container" style="margin-top: 1rem; font-size: 0.85rem; color: var(--accent-primary);"></div>
 </div>
-{% endif %}
-
-<p class="section-title">Log Expense</p>
-
-<form class="quick-add-form" method="POST">
-    {% csrf_token %}
-    <input type="number" name="amount" class="input-dark" placeholder="Amount (EGP)" min="1" step="0.01" required>
-    <select name="category" class="input-dark">
-        {% for code, label in categories %}
-            <option value="{{ code }}">{{ label }}</option>
-        {% endfor %}
-    </select>
-    <input type="text" name="note" class="input-dark" placeholder="Note (optional)">
-    <button type="submit" class="btn btn-primary">Log</button>
-</form>
-
-<!-- Pie Chart UI -->
-<p class="section-title">Spending Breakdown</p>
-
-{% if cycle %}
-<div class="chart-container">
-    <canvas id="spendingChart"></canvas>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script>
-const rawData = JSON.parse('{{ chart_data|escapejs }}');
-
-if (rawData.labels.length > 0) {
-    const ctx = document.getElementById('spendingChart').getContext('2d');
-    new Chart(ctx, {type: 'pie',data: {labels: rawData.labels,
-                datasets: [{data: rawData.data,backgroundColor:
-                ['#ff2a2a','#cc0000','#ff6b6b','#990000','#ff9999'],
-                borderColor: '#121212',borderWidth: 2}]
-                },
-            options: {
-            plugins: {
-            legend:  {
-            labels: { color: '#f0f0f0' }
-                }
-                }
-                }
-    });
-} 
-else {
-    document.querySelector('.chart-container').innerHTML =
-        '<p class="no-data">No transactions yet. Log your first expense.</p>';
-}
-</script>
-{% else %}
-    <div class="no-data">
-        <p>No active budget cycle found. <a href="{% url 'setup' %}">Set one up here.</a></p>
-    </div>
-{% endif %}
-
 {% endblock %}

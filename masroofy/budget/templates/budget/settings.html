@@ -1,0 +1,23 @@
+{% extends 'budget/base.html' %}
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2 style="margin-top: 0; font-size: 1.2rem;">Account Operations</h2>
+    <p style="font-size: 0.9rem; color: var(--text-muted);">Manage your data and active cycle state.</p>
+    
+    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+        <form method="POST" action="{% url 'settings' %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="export">
+            <button type="submit" class="btn">Export Data (JSON)</button>
+        </form>
+        
+        <form method="POST" action="{% url 'settings' %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="wipe">
+            <button type="submit" class="btn btn-danger" onclick="return confirm('Wipe all financial data? This cannot be undone.');">Wipe All Data</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
