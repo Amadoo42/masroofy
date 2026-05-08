@@ -77,17 +77,17 @@ class SettingsView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        
+
         if "account_form" not in context:
             context["account_form"] = AccountUpdateForm(instance=self.request.user)
-            
+
         if "password_form" not in context:
             context["password_form"] = PasswordChangeForm(self.request.user)
 
         active_cycle = BudgetCycle.objects.filter(
             user=self.request.user, is_active=True
         ).first()
-        
+
         if active_cycle and "cycle_form" not in context:
             context["cycle_form"] = ActiveCycleUpdateForm(instance=active_cycle)
 
@@ -99,7 +99,7 @@ class SettingsView(LoginRequiredMixin, TemplateView):
     def post(self, request, *args, **kwargs):
         action = request.POST.get("action")
         user = request.user
-        
+
         if action == "update_account":
             form = AccountUpdateForm(request.POST, instance=request.user)
             if form.is_valid():

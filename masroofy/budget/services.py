@@ -53,10 +53,10 @@ class BudgetCycleService:
     ) -> BudgetCycle:
         if allowance <= 0:
             raise ValidationError("Allowance must be a positive amount.")
-        
+
         if end_date <= start_date:
-            raise ValidationError("End date must be strictly after start date.")\
-        
+            raise ValidationError("End date must be strictly after start date.")
+
         cycle = BudgetCycle(
             user=user,
             total_allowance=allowance,
@@ -66,13 +66,13 @@ class BudgetCycleService:
             end_date=end_date,
             is_active=True,
         )
-        
+
         cycle.full_clean()
-        
+
         BudgetCycle.objects.filter(user=user, is_active=True).update(is_active=False)
-        
+
         cycle.save()
-        
+
         return cycle
 
 
@@ -123,14 +123,12 @@ class TransactionMutationCommand:
         if amount <= 0:
             raise ValidationError("Amount must be strictly positive.")
 
-        tx = Transaction(
-            cycle=cycle, amount=amount, category=category, note=note
-        )
-        
+        tx = Transaction(cycle=cycle, amount=amount, category=category, note=note)
+
         tx.full_clean()
-        
+
         tx.save()
-        
+
         cls._mutate_balance(cycle, amount, tx.timestamp.date())
         return tx
 
@@ -164,10 +162,10 @@ class TransactionMutationCommand:
         tx.amount = amount
         tx.category = category
         tx.note = note
-        
+
         tx.full_clean()
         tx.save()
-        
+
         cls._mutate_balance(tx.cycle, amount, tx.timestamp.date())
         return tx
 

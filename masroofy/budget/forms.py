@@ -124,10 +124,10 @@ class ActiveCycleUpdateForm(forms.ModelForm):
                 }
             ),
             "end_date": forms.DateInput(
-            attrs={
-                "type": "date",
-                "class": "bg-black border border-[#333] p-2 font-data-md text-on-surface focus:outline-none focus:border-[#007AFF] transition-colors w-full",
-                "style": "color-scheme: dark;",
+                attrs={
+                    "type": "date",
+                    "class": "bg-black border border-[#333] p-2 font-data-md text-on-surface focus:outline-none focus:border-[#007AFF] transition-colors w-full",
+                    "style": "color-scheme: dark;",
                 }
             ),
         }
