@@ -13,9 +13,16 @@ documentation for details.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Developer Guides
 
-   conventions
-   ClassDocumentation
-   modules
+   guides/architecture
+   guides/conventions
+   guides/data-schema
+   guides/class-reference
+   guides/changelog
 
+.. toctree::
+   :maxdepth: 4
+   :caption: API Reference (Auto-generated)
+
+   api/modules

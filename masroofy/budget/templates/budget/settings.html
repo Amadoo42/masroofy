@@ -69,23 +69,26 @@
             </form>
         </div>
 
+        <div class="bg-[#0A0A0A] rigid-border p-6">
+            <h2 class="font-heading text-lg font-medium text-on-surface mb-2">Data Management</h2>
+            <p class="font-body text-sm text-on-surface-variant mb-6">Download a local JSON copy of your complete financial history.</p>
+            
+            <form method="POST" action="{% url 'settings' %}" class="w-full">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="export">
+                <button type="submit" class="btn-secondary border text-on-surface font-label text-label uppercase py-2 px-4 w-full">Export Data</button>
+            </form>
+        </div>
+
         <div class="bg-[#0A0A0A] rigid-border p-6 border-t-2 border-t-error">
             <h2 class="font-heading text-lg font-medium text-error mb-2">Danger Zone</h2>
-            <p class="font-body text-sm text-on-surface-variant mb-6">Export your ledger or trigger a destructive wipe.</p>
+            <p class="font-body text-sm text-on-surface-variant mb-6">Permanently delete all your financial data and cycles. This cannot be undone.</p>
             
-            <div class="flex gap-4">
-                <form method="POST" action="{% url 'settings' %}" class="w-1/2">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="export">
-                    <button type="submit" class="btn-secondary border text-on-surface font-label text-label uppercase py-2 px-4 w-full">Export Data</button>
-                </form>
-                
-                <form method="POST" action="{% url 'settings' %}" class="w-1/2">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="wipe">
-                    <button type="submit" class="bg-transparent border border-error text-error hover:bg-error hover:text-black font-label text-label uppercase py-2 px-4 transition-colors w-full" onclick="return confirm('Wipe all financial data? This cannot be undone.');">Wipe Data</button>
-                </form>
-            </div>
+            <form method="POST" action="{% url 'settings' %}" class="w-full">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="wipe">
+                <button type="submit" class="bg-transparent border border-error text-error hover:bg-error hover:text-black font-label text-label uppercase py-2 px-4 transition-colors w-full" onclick="return confirm('Wipe all financial data? This cannot be undone.');">Wipe Data</button>
+            </form>
         </div>
 
     </div>

@@ -421,7 +421,9 @@ class ViewIntegrationTests(TestCase):
                 "action": "update_password",
             },
         )
-        self.assertRedirects(response, reverse("settings"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "budget/settings.html")
+        self.assertFalse(response.context["password_form"].is_valid())
 
     def test_settings_update_cycle(self):
         cycle = BudgetCycleService.create_cycle(
