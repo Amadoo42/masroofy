@@ -77,13 +77,18 @@ class SettingsView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["account_form"] = AccountUpdateForm(instance=self.request.user)
-        context["password_form"] = PasswordChangeForm(self.request.user)
+        
+        if "account_form" not in context:
+            context["account_form"] = AccountUpdateForm(instance=self.request.user)
+            
+        if "password_form" not in context:
+            context["password_form"] = PasswordChangeForm(self.request.user)
 
         active_cycle = BudgetCycle.objects.filter(
             user=self.request.user, is_active=True
         ).first()
-        if active_cycle:
+        
+        if active_cycle and "cycle_form" not in context:
             context["cycle_form"] = ActiveCycleUpdateForm(instance=active_cycle)
 
         context["unread_notifications"] = Notification.objects.filter(
@@ -93,12 +98,15 @@ class SettingsView(LoginRequiredMixin, TemplateView):
 
     def post(self, request, *args, **kwargs):
         action = request.POST.get("action")
-
+        user = request.user
+        
         if action == "update_account":
             form = AccountUpdateForm(request.POST, instance=request.user)
             if form.is_valid():
                 form.save()
                 messages.success(request, "Account updated successfully.")
+                return redirect("settings")
+            return self.render_to_response(self.get_context_data(account_form=form))
 
         elif action == "update_password":
             form = PasswordChangeForm(request.user, request.POST)
@@ -106,6 +114,8 @@ class SettingsView(LoginRequiredMixin, TemplateView):
                 user = form.save()
                 update_session_auth_hash(request, user)
                 messages.success(request, "Password updated successfully.")
+                return redirect("settings")
+            return self.render_to_response(self.get_context_data(password_form=form))
 
         elif action == "update_cycle":
             active_cycle = BudgetCycle.objects.filter(
@@ -123,11 +133,8 @@ class SettingsView(LoginRequiredMixin, TemplateView):
                     cycle.remaining_cycle_balance += allowance_diff
                     cycle.save()
                     messages.success(request, "Budget cycle parameters updated.")
-                else:
-                    messages.error(
-                        request,
-                        "Failed to update cycle. Please check your date constraints.",
-                    )
+                    return redirect("settings")
+                return self.render_to_response(self.get_context_data(cycle_form=form))
 
         elif action == "wipe":
             AccountService.wipe_data(request.user)
