@@ -1,6 +1,11 @@
 budget.migrations package
 =========================
 
+.. automodule:: budget.migrations
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 Submodules
 ----------
 
@@ -40,14 +45,6 @@ budget.migrations.0005\_notification module
 -------------------------------------------
 
 .. automodule:: budget.migrations.0005_notification
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-Module contents
----------------
-
-.. automodule:: budget.migrations
    :members:
    :show-inheritance:
    :undoc-members:

@@ -1,6 +1,11 @@
 core package
 ============
 
+.. automodule:: core
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 Submodules
 ----------
 
@@ -32,14 +37,6 @@ core.wsgi module
 ----------------
 
 .. automodule:: core.wsgi
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-Module contents
----------------
-
-.. automodule:: core
    :members:
    :show-inheritance:
    :undoc-members:

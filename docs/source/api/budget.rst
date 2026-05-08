@@ -1,6 +1,11 @@
 budget package
 ==============
 
+.. automodule:: budget
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 Subpackages
 -----------
 
@@ -88,14 +93,6 @@ budget.views module
 -------------------
 
 .. automodule:: budget.views
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-Module contents
----------------
-
-.. automodule:: budget
    :members:
    :show-inheritance:
    :undoc-members:
